@@ -2,17 +2,19 @@ import { GoogleGenAI } from "@google/genai";
 
 const GEMINI_MODEL = "gemini-3-flash-preview";
 
-function getGeminiApiKeys(): string[] {
-  const keys = [
-    process.env.GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY_1,
-    process.env.GEMINI_API_KEY_2,
-    process.env.GEMINI_API_KEY_3,
-    process.env.GEMINI_API_KEY_4,
-    process.env.GEMINI_API_KEY_5,
-    process.env.GEMINI_API_KEY_6
-  ]
-    .map((key) => key?.trim())
+export function getGeminiApiKeys(): string[] {
+  const keys = Object.entries(process.env)
+    .map(([name, value]) => {
+      const match = /^GEMINI_API_KEY(?:_(\d+))?$/.exec(name);
+      if (!match) return null;
+      return {
+        order: match[1] ? Number(match[1]) : 0,
+        value
+      };
+    })
+    .filter((entry): entry is { order: number; value: string | undefined } => Boolean(entry))
+    .sort((a, b) => a.order - b.order)
+    .map((entry) => entry.value?.trim())
     .filter((key): key is string => Boolean(key));
 
   return [...new Set(keys)];

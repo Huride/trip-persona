@@ -9,7 +9,7 @@ Implemented:
 - Deterministic destination scoring with Vitest coverage.
 - Sample Instagram profile fallback analysis for cafe/gallery, ocean/nature, and food/city profiles.
 - Gemini prompt builders and server-side Gemini helper with fallback behavior.
-- Gemini model updated to `gemini-3-flash-preview`; helper now tries `GEMINI_API_KEY` and fallback slots without exposing keys to the browser.
+- Gemini model updated to `gemini-3-flash-preview`; helper now reads `GEMINI_API_KEY` and any numbered fallback slots in numeric order without exposing keys to the browser.
 - Best-effort Instagram ingestion using Playwright with sample fallback.
 - Instagram live ingestion now rejects login-wall/short unusable text and selects a varied deterministic sample fallback instead of always using the cafe/gallery profile.
 - `/api/analyze` endpoint that combines ingestion, persona analysis, ranking, concepts, and itinerary.
@@ -24,7 +24,7 @@ Implemented:
 Verification:
 - `npm test`: 5 files, 13 tests passed.
 - `npm run build`: production build passed.
-- Gemini key check: 6 unique configured keys checked; 0 usable. Existing keys were rejected as expired or leaked, so no valid main/fallback key could be promoted.
+- Gemini key check: 9 configured keys checked; 3 usable. Usable keys were promoted to `GEMINI_API_KEY`, `GEMINI_API_KEY_1`, and `GEMINI_API_KEY_2`; expired/leaked keys were removed from local env files.
 - Instagram crawler check: public Instagram profile returned a login wall in this environment; app falls back to deterministic sample analysis.
 
 Demo inputs:
