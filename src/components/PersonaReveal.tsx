@@ -23,6 +23,18 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
           <p className="text-[15px] leading-[22px] text-muted">{result.persona.summary}</p>
         </div>
 
+        <article className="grid gap-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[18px] font-extrabold">인스타에서 읽은 취향</h2>
+            {result.profileUsername ? <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-cyan-900">@{result.profileUsername}</span> : null}
+          </div>
+          <div className="grid gap-2">
+            {(result.profileEvidence ?? ["프로필의 장소, 분위기, 활동 신호를 여행 조건과 함께 분석했습니다."]).map((note) => (
+              <p key={note} className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{note}</p>
+            ))}
+          </div>
+        </article>
+
         <div className="grid gap-3">
           {insightCards.map((card) => (
             <article key={card.label} className="grid gap-2 rounded-2xl border border-line bg-surface p-5 shadow-sm">
@@ -70,7 +82,7 @@ function buildInsightCards(result: TripPersonaResult) {
         : "카페와 산책이 섞인 도시 취향";
   const paceLabel = result.persona.pace === "slow" ? "하루 2-3곳을 깊게 보는 일정" : result.persona.pace === "packed" ? "하루 5곳 이상 촘촘한 일정" : "대표 코스와 여유를 섞는 일정";
   const crowdLabel = result.persona.crowdTolerance === "low" ? "혼잡을 피하는 쪽" : result.persona.crowdTolerance === "high" ? "활기 있는 장소도 괜찮은 쪽" : "혼잡도는 중간 수준까지 허용";
-  const evidence = result.persona.confidenceNotes[0] ?? "프로필 텍스트와 설문 답변을 함께 반영했습니다.";
+  const evidence = result.profileEvidence?.[0] ?? result.persona.confidenceNotes[0] ?? "프로필 텍스트와 설문 답변을 함께 반영했습니다.";
 
   return [
     { label: "좋아하는 분위기", title: mood, description: "프로필에서 반복되는 장소와 활동 신호를 여행 컨셉으로 번역했습니다." },

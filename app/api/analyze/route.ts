@@ -3,13 +3,25 @@ import { z } from "zod";
 import { buildDestinationPlans } from "@/src/lib/destinationPlans";
 import { places } from "@/src/lib/destinations";
 import { generateJson } from "@/src/lib/gemini";
-import { ingestInstagramProfile } from "@/src/lib/instagram";
-import { analyzeSampleProfile } from "@/src/lib/mockAnalysis";
-import { analyzeProfileText } from "@/src/lib/profileAnalysis";
-import { buildConceptPrompt, buildItineraryPrompt, buildPersonaPrompt } from "@/src/lib/prompts";
-import { parseItineraryPayload, parseTravelConcepts, parseTravelPersona } from "@/src/lib/resultValidation";
+import { analyzeInstagramProfile } from "@/src/lib/profilePipeline";
+import { buildConceptPrompt, buildItineraryPrompt } from "@/src/lib/prompts";
+import { parseItineraryPayload, parseTravelConcepts } from "@/src/lib/resultValidation";
 import { rankDestinations } from "@/src/lib/scoring";
-import type { TripSurvey } from "@/src/lib/types";
+import type { ProfileAnalysisResult, TripSurvey } from "@/src/lib/types";
+
+const profileAnalysisSchema = z.object({
+  persona: z.object({
+    title: z.string(),
+    summary: z.string(),
+    tasteTags: z.array(z.string()),
+    pace: z.enum(["slow", "balanced", "packed"]),
+    crowdTolerance: z.enum(["low", "medium", "high", "unknown"]),
+    confidenceNotes: z.array(z.string())
+  }),
+  source: z.enum(["live", "sample", "pasted"]),
+  username: z.string(),
+  profileEvidence: z.array(z.string())
+});
 
 const surveySchema = z.object({
   instagramUrl: z.string().min(1),
@@ -55,22 +67,17 @@ const surveySchema = z.object({
   pace: z.enum(["slow", "balanced", "packed"]),
   walkingLimit: z.enum(["under-5k", "under-10k", "no-limit"]),
   include: z.array(z.string()),
-  avoid: z.array(z.string())
+  avoid: z.array(z.string()),
+  profileAnalysis: profileAnalysisSchema.optional()
 });
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const survey = surveySchema.parse(body) as TripSurvey;
-  const ingested = await ingestInstagramProfile(survey.instagramUrl);
-
-  const fallbackPersona = survey.instagramUrl.startsWith("sample:")
-    ? analyzeSampleProfile(survey.instagramUrl.replace("sample:", ""))
-    : analyzeProfileText(ingested.profileText, ingested.username);
-
-  const persona = parseTravelPersona(
-    await generateJson<unknown>(buildPersonaPrompt(ingested.profileText), fallbackPersona),
-    fallbackPersona
-  );
+  const parsed = surveySchema.parse(body);
+  const { profileAnalysis, ...surveyInput } = parsed;
+  const survey = surveyInput as TripSurvey;
+  const profileResult = (profileAnalysis as ProfileAnalysisResult | undefined) ?? await analyzeInstagramProfile(survey.instagramUrl);
+  const persona = profileResult.persona;
 
   const destinations = rankDestinations(persona, survey);
   const fallbackConcepts = [
@@ -115,6 +122,8 @@ export async function POST(request: Request) {
     whyThisFits: itineraryPayload.whyThisFits,
     excludedPlaces: itineraryPayload.excludedPlaces,
     destinationPlans,
-    source: ingested.source
+    source: profileResult.source,
+    profileUsername: profileResult.username,
+    profileEvidence: profileResult.profileEvidence
   });
 }

@@ -8,6 +8,7 @@ type SurveyAnswers = Omit<TripSurvey, "instagramUrl" | "destinationPreference">;
 
 interface SurveyFlowProps {
   instagramUrl: string;
+  profileStatus: "idle" | "analyzing" | "ready" | "fallback" | "error";
   onComplete: (survey: TripSurvey) => void;
 }
 
@@ -140,11 +141,19 @@ const defaults: SurveyAnswers = {
   avoid: ["혼잡"]
 };
 
-export function SurveyFlow({ instagramUrl, onComplete }: SurveyFlowProps) {
+const analysisStatusCopy: Record<SurveyFlowProps["profileStatus"], { title: string; detail: string }> = {
+  idle: { title: "AI 취향 분석 준비 중", detail: "프로필 링크를 확인하고 있어요." },
+  analyzing: { title: "AI가 인스타 취향을 분석 중", detail: "공개 프로필의 장소, 분위기, 활동 신호를 읽고 있어요." },
+  ready: { title: "프로필 취향 분석 완료", detail: "남은 답변과 합쳐 여행지를 정렬할 준비가 됐어요." },
+  fallback: { title: "프로필 접근 제한 감지", detail: "접근 가능한 신호와 보정 샘플로 취향 분석을 이어가고 있어요." },
+  error: { title: "보조 분석으로 진행 중", detail: "링크 접근이 불안정해서 설문 답변 중심으로 추천을 보정합니다." }
+};
+
+export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFlowProps) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<SurveyAnswers>(defaults);
   const question = questions[step];
-  const progress = Math.min(92, 24 + step * 9);
+  const statusCopy = analysisStatusCopy[profileStatus];
 
   const selectedValues = useMemo(() => {
     const value = answers[question.key];
@@ -188,13 +197,13 @@ export function SurveyFlow({ instagramUrl, onComplete }: SurveyFlowProps) {
       <section className="mx-auto grid w-full max-w-md gap-4">
         <div className="sticky top-4 z-10 grid gap-2 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-900 shadow-sm">
           <div className="flex items-center justify-between text-[13px] font-extrabold">
-            <span>여행 취향 분석 중</span>
-            <span>{progress}%</span>
+            <span>{statusCopy.title}</span>
+            <span>{profileStatus === "ready" || profileStatus === "fallback" ? "완료" : "진행 중"}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-cyan-100">
-            <div className="h-full rounded-full bg-cyan-800 transition-all" style={{ width: `${progress}%` }} />
+            <div className={`h-full rounded-full bg-cyan-800 ${profileStatus === "ready" || profileStatus === "fallback" ? "w-full" : "animate-loading-progress"}`} />
           </div>
-          <p className="text-[12px] leading-4">프로필의 장소, 분위기, 활동 신호를 읽고 있어요. 답변할수록 추천이 더 정확해집니다.</p>
+          <p className="text-[12px] leading-4">{statusCopy.detail}</p>
         </div>
 
         <div className="flex items-center justify-between text-[12px] font-bold text-muted">

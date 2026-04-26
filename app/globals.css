@@ -38,3 +38,25 @@ button {
 .animate-loading-progress {
   animation: loading-progress 2.4s ease-in-out infinite;
 }
+
+@keyframes loading-dots {
+  0%,
+  20% {
+    content: "";
+  }
+  40% {
+    content: ".";
+  }
+  60% {
+    content: "..";
+  }
+  80%,
+  100% {
+    content: "...";
+  }
+}
+
+.loading-dots::after {
+  animation: loading-dots 1.4s steps(1, end) infinite;
+  content: "";
+}

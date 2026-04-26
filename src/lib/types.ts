@@ -136,6 +136,8 @@ export interface TripPersonaResult {
   excludedPlaces: string[];
   destinationPlans: DestinationPlan[];
   source?: "live" | "sample" | "pasted";
+  profileUsername?: string;
+  profileEvidence?: string[];
 }
 
 export interface RecommendationItem {
@@ -159,4 +161,11 @@ export interface DestinationPlan {
   photoSpots: RecommendationItem[];
   itinerary: ItineraryItem[];
   dailyItinerary: DailyItinerary[];
+}
+
+export interface ProfileAnalysisResult {
+  persona: TravelPersona;
+  source: "live" | "sample" | "pasted";
+  username: string;
+  profileEvidence: string[];
 }

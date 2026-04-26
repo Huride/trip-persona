@@ -1,25 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DestinationRecommendations } from "@/src/components/DestinationRecommendations";
 import { FinalizingView } from "@/src/components/FinalizingView";
 import { PersonaReveal } from "@/src/components/PersonaReveal";
 import { ProfileEntry } from "@/src/components/ProfileEntry";
 import { SurveyFlow } from "@/src/components/SurveyFlow";
-import type { TripPersonaResult, TripSurvey } from "@/src/lib/types";
+import type { ProfileAnalysisResult, TripPersonaResult, TripSurvey } from "@/src/lib/types";
 
 type FlowStage = "entry" | "survey" | "finalizing" | "persona" | "recommendations" | "error";
+type ProfileAnalysisStatus = "idle" | "analyzing" | "ready" | "fallback" | "error";
 
 export default function HomePage() {
   const [stage, setStage] = useState<FlowStage>("entry");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [result, setResult] = useState<TripPersonaResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [profileStatus, setProfileStatus] = useState<ProfileAnalysisStatus>("idle");
+  const profileAnalysisPromise = useRef<Promise<ProfileAnalysisResult | null> | null>(null);
 
   function handleStart(nextInstagramUrl: string) {
     setInstagramUrl(nextInstagramUrl);
     setResult(null);
     setError(null);
+    setProfileStatus("analyzing");
+    profileAnalysisPromise.current = fetch("/api/profile-analysis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ instagramUrl: nextInstagramUrl })
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("프로필 분석 요청에 실패했습니다.");
+        const data = (await response.json()) as ProfileAnalysisResult;
+        setProfileStatus(data.source === "live" ? "ready" : "fallback");
+        return data;
+      })
+      .catch(() => {
+        setProfileStatus("error");
+        return null;
+      });
     setStage("survey");
   }
 
@@ -28,10 +47,11 @@ export default function HomePage() {
     setError(null);
 
     try {
+      const profileAnalysis = await profileAnalysisPromise.current;
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(survey)
+        body: JSON.stringify({ ...survey, profileAnalysis: profileAnalysis ?? undefined })
       });
 
       if (!response.ok) {
@@ -52,6 +72,8 @@ export default function HomePage() {
     setInstagramUrl("");
     setResult(null);
     setError(null);
+    setProfileStatus("idle");
+    profileAnalysisPromise.current = null;
   }
 
   if (stage === "entry") {
@@ -59,11 +81,11 @@ export default function HomePage() {
   }
 
   if (stage === "survey") {
-    return <SurveyFlow instagramUrl={instagramUrl} onComplete={handleSurveyComplete} />;
+    return <SurveyFlow instagramUrl={instagramUrl} profileStatus={profileStatus} onComplete={handleSurveyComplete} />;
   }
 
   if (stage === "finalizing") {
-    return <FinalizingView />;
+    return <FinalizingView profileStatus={profileStatus} />;
   }
 
   if (stage === "persona" && result) {

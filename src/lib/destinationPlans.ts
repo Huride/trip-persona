@@ -1,5 +1,5 @@
 import { destinations, places } from "./destinations";
-import type { DailyItinerary, DestinationId, DestinationPlan, DestinationRecommendation, ItineraryItem, Place, RecommendationItem, TripSurvey } from "./types";
+import type { CostLevel, DailyItinerary, DestinationId, DestinationPlan, DestinationRecommendation, ItineraryItem, Place, RecommendationItem, TripSurvey, WalkingLoad } from "./types";
 
 interface DestinationPlanSeed {
   photo: DestinationPlan["photo"];
@@ -7,6 +7,15 @@ interface DestinationPlanSeed {
   stays: RecommendationItem[];
   restaurants: RecommendationItem[];
   photoSpots: RecommendationItem[];
+}
+
+interface StopCandidate {
+  placeName: string;
+  activity: string;
+  fitRationale: string;
+  cost: CostLevel;
+  walkingLoad: WalkingLoad;
+  planB: string;
 }
 
 const planSeeds: Partial<Record<DestinationId, DestinationPlanSeed>> = {
@@ -94,7 +103,7 @@ export function buildDestinationPlans(recommendations: DestinationRecommendation
     const destinationMeta = destinations.find((item) => item.id === destination.destinationId);
     const seed = planSeeds[destination.destinationId] ?? makeDefaultSeed(destination.destinationName, destinationMeta?.summary);
     const destinationPlaces = places.filter((place) => place.destinationId === destination.destinationId);
-    const dailyItinerary = buildDailyItinerary(destination.destinationId, destinationPlaces, survey, seed);
+    const dailyItinerary = buildDailyItinerary(destination.destinationId, destination.destinationName, destinationPlaces, survey, seed);
 
     return {
       destination,
@@ -109,54 +118,147 @@ export function buildDestinationPlans(recommendations: DestinationRecommendation
   });
 }
 
-function buildDailyItinerary(destinationId: DestinationId, destinationPlaces: Place[], survey: TripSurvey, seed: DestinationPlanSeed): DailyItinerary[] {
+function buildDailyItinerary(destinationId: DestinationId, destinationName: string, destinationPlaces: Place[], survey: TripSurvey, seed: DestinationPlanSeed): DailyItinerary[] {
   const basePlaces = destinationPlaces.length > 0 ? destinationPlaces : places.filter((place) => place.destinationId === destinationId);
   const dayCount = tripLengthToDays(survey.tripLength);
   const titles = ["도착과 첫 취향 체크", "핵심 동네 깊게 보기", "로컬 미식과 사진 루트", "여유 회복과 쇼핑", "마지막 산책과 재방문 후보"];
+  const stopPool = buildStopPool(destinationName, basePlaces, seed, survey);
 
   return Array.from({ length: dayCount }, (_, index) => ({
     day: index + 1,
     title: titles[index] ?? `${index + 1}일차 취향 확장 루트`,
-    items: buildDayItems(basePlaces, seed, index, survey)
+    items: buildDayItems(stopPool, seed, index, survey)
   }));
 }
 
-function buildDayItems(basePlaces: Place[], seed: DestinationPlanSeed, dayIndex: number, survey: TripSurvey): ItineraryItem[] {
-  const selectedPlace = basePlaces[dayIndex % Math.max(basePlaces.length, 1)];
-  const walkingLoad = survey.walkingLimit === "under-5k" ? "low" : selectedPlace?.walkingLoad ?? "medium";
-  const corePlaceName = selectedPlace?.name ?? seed.photoSpots[0]?.name ?? "대표 취향 스팟";
-  const coreActivity = selectedPlace?.description ?? seed.photoSpots[0]?.summary ?? "프로필 취향과 맞는 대표 장소를 중심으로 일정을 시작합니다.";
-  const coreTags = selectedPlace?.vibeTags.join(", ") ?? "profile taste";
+function buildStopPool(destinationName: string, basePlaces: Place[], seed: DestinationPlanSeed, survey: TripSurvey): StopCandidate[] {
+  const candidates: StopCandidate[] = [
+    ...basePlaces.map((place) => ({
+      placeName: place.name,
+      activity: place.description,
+      fitRationale: `${place.vibeTags.join(", ")} 취향 신호와 연결됩니다.`,
+      cost: place.estimatedCost,
+      walkingLoad: place.walkingLoad,
+      planB: "혼잡하면 같은 권역의 예약 가능한 전시, 쇼핑몰, 로컬 카페로 대체하세요."
+    })),
+    ...seed.photoSpots.map((spot) => ({
+      placeName: spot.name,
+      activity: spot.summary,
+      fitRationale: spot.why,
+      cost: "low" as const,
+      walkingLoad: "medium" as const,
+      planB: "날씨가 좋지 않으면 가까운 실내 포토 스팟이나 카페로 바꾸세요."
+    })),
+    ...seed.restaurants.map((restaurant) => ({
+      placeName: restaurant.name,
+      activity: restaurant.summary,
+      fitRationale: restaurant.why,
+      cost: "medium" as const,
+      walkingLoad: "low" as const,
+      planB: "웨이팅이 길면 숙소 근처 캐주얼 다이닝이나 포장 가능한 로컬 메뉴로 바꾸세요."
+    })),
+    ...buildGeneratedStops(destinationName, survey)
+  ];
+
+  const seen = new Set<string>();
+  return candidates.filter((candidate) => {
+    if (seen.has(candidate.placeName)) return false;
+    seen.add(candidate.placeName);
+    return true;
+  });
+}
+
+function buildDayItems(stopPool: StopCandidate[], seed: DestinationPlanSeed, dayIndex: number, survey: TripSurvey): ItineraryItem[] {
+  const used = new Set<string>();
+  const pick = (offset: number) => {
+    for (let index = 0; index < stopPool.length; index += 1) {
+      const candidate = stopPool[(dayIndex * 3 + offset + index) % stopPool.length];
+      if (!used.has(candidate.placeName)) {
+        used.add(candidate.placeName);
+        return candidate;
+      }
+    }
+    return stopPool[0];
+  };
+
+  const firstStop = dayIndex === 0
+    ? {
+        placeName: seed.transport[0]?.name ?? "이동 시작",
+        activity: seed.transport[0]?.summary ?? "숙소와 첫 장소까지 부담 없는 이동으로 시작합니다.",
+        fitRationale: seed.transport[0]?.why ?? "이동 피로를 줄이고 첫날 만족도를 높입니다.",
+        cost: "medium" as const,
+        walkingLoad: "low" as const,
+        planB: "이동이 지연되면 숙소 체크인 후 가까운 카페나 실내 장소로 시작하세요."
+      }
+    : pick(0);
+  used.add(firstStop.placeName);
+
+  const secondStop = pick(dayIndex === 0 ? 0 : 1);
+  const thirdStop = pick(dayIndex === 0 ? 1 : 2);
 
   return [
     {
       time: dayIndex === 0 ? "11:00" : "10:00",
-      placeName: dayIndex === 0 ? seed.transport[0]?.name ?? "이동 시작" : corePlaceName,
-      activity: dayIndex === 0 ? seed.transport[0]?.summary ?? "숙소와 첫 장소까지 부담 없는 이동으로 시작합니다." : coreActivity,
-      fitRationale: dayIndex === 0 ? seed.transport[0]?.why ?? "이동 피로를 줄이고 첫날 만족도를 높입니다." : `${coreTags} 취향 신호와 연결됩니다.`,
-      cost: dayIndex === 0 ? "medium" : selectedPlace?.estimatedCost ?? "low",
-      walkingLoad,
-      planB: "이동이 지연되면 숙소 체크인 후 가까운 카페나 실내 장소로 시작하세요."
+      ...normalizeWalking(firstStop, survey)
     },
     {
       time: "14:00",
-      placeName: dayIndex % 2 === 0 ? corePlaceName : seed.photoSpots[0]?.name ?? corePlaceName,
-      activity: dayIndex % 2 === 0 ? coreActivity : seed.photoSpots[0]?.summary ?? coreActivity,
-      fitRationale: dayIndex % 2 === 0 ? `${coreTags} 취향 신호와 연결됩니다.` : seed.photoSpots[0]?.why ?? "사진과 분위기 취향을 함께 만족시킵니다.",
-      cost: selectedPlace?.estimatedCost ?? "low",
-      walkingLoad,
-      planB: "혼잡하면 같은 권역의 예약 가능한 전시, 쇼핑몰, 로컬 카페로 대체하세요."
+      ...normalizeWalking(secondStop, survey)
     },
     {
       time: "18:30",
-      placeName: seed.restaurants[0]?.name ?? "로컬 식사",
-      activity: seed.restaurants[0]?.summary ?? "그 지역에서 부담 없이 즐길 수 있는 로컬 식사를 넣습니다.",
-      fitRationale: seed.restaurants[0]?.why ?? "맛집과 로컬 경험을 일정의 만족 포인트로 잡습니다.",
-      cost: "medium",
-      walkingLoad: "low",
-      planB: "웨이팅이 길면 숙소 근처 캐주얼 다이닝이나 포장 가능한 로컬 메뉴로 바꾸세요."
+      ...normalizeWalking(thirdStop, survey)
     }
   ];
+}
+
+function buildGeneratedStops(destinationName: string, survey: TripSurvey): StopCandidate[] {
+  const wantsFood = survey.include.includes("맛집");
+  const wantsCafe = survey.include.includes("카페");
+  const wantsShopping = survey.include.includes("쇼핑");
+  const wantsPhoto = survey.include.includes("사진");
+
+  return [
+    {
+      placeName: `${destinationName} 로컬 골목`,
+      activity: wantsFood ? "현지 식당과 작은 상점을 이어서 보는 동네 탐색" : "관광지보다 생활감 있는 거리를 천천히 보는 산책",
+      fitRationale: "프로필의 로컬/도시 취향을 일정에 녹입니다.",
+      cost: "low",
+      walkingLoad: "medium",
+      planB: "동선이 길면 같은 권역 안에서 식사와 카페만 남기세요."
+    },
+    {
+      placeName: `${destinationName} 감도 카페`,
+      activity: wantsCafe ? "카페에서 쉬면서 사진과 다음 동선을 정리하는 시간" : "일정 중간 피로를 낮추는 실내 휴식",
+      fitRationale: "프로필의 분위기 취향과 설문 피로도 조건을 함께 반영합니다.",
+      cost: "medium",
+      walkingLoad: "low",
+      planB: "만석이면 같은 역 주변의 조용한 베이커리나 티룸으로 대체하세요."
+    },
+    {
+      placeName: `${destinationName} 야경 산책`,
+      activity: wantsPhoto ? "해 질 무렵부터 야간 사진을 남기는 짧은 산책" : "저녁 식사 후 부담 없이 보는 야간 분위기",
+      fitRationale: "하루 마지막에 기억에 남는 장면을 만들기 좋습니다.",
+      cost: "free",
+      walkingLoad: "medium",
+      planB: "비가 오면 전망 좋은 실내 쇼핑몰이나 호텔 라운지로 바꾸세요."
+    },
+    {
+      placeName: `${destinationName} 편집숍 거리`,
+      activity: wantsShopping ? "브랜드 숍과 기념품 후보를 짧게 비교" : "동네 분위기를 보는 가벼운 쇼핑 산책",
+      fitRationale: "취향을 드러내는 물건과 공간을 일정에 넣습니다.",
+      cost: "medium",
+      walkingLoad: "medium",
+      planB: "쇼핑 피로가 크면 한 곳만 찍고 근처 식사로 넘어가세요."
+    }
+  ];
+}
+
+function normalizeWalking(candidate: StopCandidate, survey: TripSurvey): Omit<ItineraryItem, "time"> {
+  return {
+    ...candidate,
+    walkingLoad: survey.walkingLimit === "under-5k" && candidate.walkingLoad === "high" ? "medium" : candidate.walkingLoad
+  };
 }
 
 function tripLengthToDays(tripLength: TripSurvey["tripLength"]): number {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeProfileText, selectFallbackSampleId } from "../src/lib/profileAnalysis";
+import { analyzeProfileText, buildProfileEvidence, selectFallbackSampleId } from "../src/lib/profileAnalysis";
 
 describe("analyzeProfileText", () => {
   it("detects food and night market profiles without using cafe-gallery fallback", () => {
@@ -25,5 +25,15 @@ describe("selectFallbackSampleId", () => {
     ];
 
     expect(new Set(ids).size).toBeGreaterThan(1);
+  });
+});
+
+describe("buildProfileEvidence", () => {
+  it("turns persona tags into readable Instagram analysis notes", () => {
+    const persona = analyzeProfileText("night market street food local restaurant izakaya", "foodie");
+    const evidence = buildProfileEvidence(persona, "foodie", "live");
+
+    expect(evidence.join(" ")).toContain("foodie");
+    expect(evidence.join(" ")).toContain("미식");
   });
 });

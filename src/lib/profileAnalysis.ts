@@ -1,3 +1,4 @@
+import type { InstagramProfileContent } from "./instagram";
 import type { TravelPersona } from "./types";
 
 type PersonaTemplate = TravelPersona & { keywords: string[] };
@@ -79,4 +80,45 @@ export function selectFallbackSampleId(input: string): "cafe-gallery" | "ocean-n
 
   const hash = [...normalized].reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return (["cafe-gallery", "ocean-nature", "food-city"] as const)[hash % 3];
+}
+
+export function buildProfileEvidence(persona: TravelPersona, username: string, source: InstagramProfileContent["source"]): string[] {
+  const tagLabels = persona.tasteTags.map(labelTasteTag).filter(Boolean);
+  const uniqueLabels = [...new Set(tagLabels)];
+  const sourceLabel = source === "live" ? "실제 공개 프로필" : "접근 제한으로 보정한 프로필 샘플";
+  const paceLabel = persona.pace === "packed" ? "짧은 시간에 여러 장면을 담는 고밀도 여행" : persona.pace === "slow" ? "한 장소를 오래 즐기는 여유형 여행" : "대표 코스와 여유를 섞는 균형형 여행";
+  const crowdLabel = persona.crowdTolerance === "low" ? "혼잡한 장소는 피하는 쪽" : persona.crowdTolerance === "high" ? "활기 있는 장소도 무리 없는 쪽" : "혼잡도는 중간 수준까지 허용";
+
+  return [
+    `${username}의 ${sourceLabel}에서 ${uniqueLabels.slice(0, 4).join(", ")} 신호가 두드러졌어요.`,
+    `일정은 ${paceLabel}으로 잡는 편이 어울립니다.`,
+    `${crowdLabel}이라 시간대와 Plan B를 함께 제안합니다.`
+  ];
+}
+
+function labelTasteTag(tag: string): string {
+  const labels: Record<string, string> = {
+    food: "미식",
+    "local-food": "로컬 미식",
+    city: "도시 산책",
+    urban: "도시 감도",
+    night: "야간 무드",
+    packed: "고밀도 일정",
+    coastal: "바다",
+    ocean: "오션뷰",
+    beach: "해변",
+    slow: "느린 여행",
+    rest: "휴식",
+    photo: "사진",
+    design: "디자인",
+    gallery: "전시",
+    cafes: "카페",
+    shopping: "쇼핑",
+    quiet: "조용한 동네",
+    local: "로컬",
+    walk: "산책",
+    retro: "레트로"
+  };
+
+  return labels[tag] ?? tag;
 }

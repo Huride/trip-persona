@@ -61,4 +61,24 @@ describe("buildDestinationPlans", () => {
       })
     );
   });
+
+  it("does not repeat the same place within a day when a destination has few seed places", () => {
+    const [plan] = buildDestinationPlans(
+      [
+        {
+          destinationId: "osaka",
+          destinationName: "오사카",
+          fitScore: 94,
+          reason: "미식과 도시 취향이 잘 맞습니다.",
+          tradeOff: "인기 지역은 혼잡할 수 있습니다."
+        }
+      ],
+      { ...survey, tripLength: "3n4d", include: ["맛집", "쇼핑", "사진"], pace: "packed" }
+    );
+
+    for (const day of plan.dailyItinerary) {
+      const placeNames = day.items.map((item) => item.placeName);
+      expect(new Set(placeNames).size).toBe(placeNames.length);
+    }
+  });
 });
