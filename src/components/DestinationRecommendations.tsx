@@ -100,7 +100,7 @@ function DestinationHero({ plan }: { plan: DestinationPlan }) {
 
 function RecommendationCard({ icon, title, item }: { icon: ReactNode; title: string; item?: { name: string; summary: string; why: string } }) {
   return (
-    <article className="grid min-h-32 gap-2 rounded-xl border border-line bg-surface p-3 shadow-sm">
+    <article className="grid min-h-36 gap-2 rounded-xl border border-line bg-surface p-3 shadow-sm">
       <div className="flex items-center gap-2 text-[13px] font-extrabold text-cyan-900">
         {icon}
         {title}
@@ -108,6 +108,7 @@ function RecommendationCard({ icon, title, item }: { icon: ReactNode; title: str
       <div>
         <h3 className="text-[14px] font-extrabold leading-5">{item?.name}</h3>
         <p className="mt-1 text-[12px] leading-4 text-muted">{item?.summary}</p>
+        {item?.why ? <p className="mt-2 rounded-lg bg-cyan-50 p-2 text-[11px] font-bold leading-4 text-cyan-950">{item.why}</p> : null}
       </div>
     </article>
   );
