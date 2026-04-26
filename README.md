@@ -1,17 +1,60 @@
 # TripPersona
 
-TripPersona is a hackathon MVP concept for turning an Instagram profile's public travel taste signals into a realistic trip plan.
+- Live Demo: https://trippersona-mvp.vercel.app
+- Presentation Deck: https://huride.github.io/trip-persona/
 
-The product analyzes an Instagram profile URL, asks for trip constraints while analysis runs, then generates:
+TripPersona는 인스타그램 공개 프로필에서 드러나는 취향 신호를 읽고, 간단한 여행 설문과 결합해 개인화된 여행지와 일정, 예약 구좌까지 제안하는 해커톤 MVP입니다.
 
-- a travel persona
-- top destination recommendations
-- three trip concepts
-- a practical itinerary with rationale and Plan B options
+## Problem
 
-## Current Status
+여행 영감은 이미 SNS에서 시작됩니다. 발표덱의 리서치 기준으로 글로벌 여행자의 75%가 SNS에서 여행 영감을 얻고, Z세대 여행자의 84%가 SNS로 여행지를 탐색합니다. 한국 인스타그램 사용자도 2,430만명 규모까지 커졌습니다.
 
-This repository contains a working Next.js MVP with deterministic fallback demos, a server-side Gemini integration, and a best-effort Instagram ingestion path.
+하지만 실제 계획은 여전히 분리되어 있습니다.
+
+- 인스타그램에서 본 분위기와 취향을 여행지, 동선, 예약 후보로 번역하는 과정이 수동입니다.
+- 기존 여행 서비스는 날짜, 지역, 가격 필터 중심이라 사용자의 시각적 취향을 잘 반영하지 못합니다.
+- 저장한 사진과 실제 일정 사이에 노트앱, 지도앱, OTA 검색을 오가는 반복 작업이 생깁니다.
+
+## Solution
+
+TripPersona는 "당신의 인스타그램은 이미 당신의 여행 취향을 알고 있다"는 가설에서 출발합니다. 프로필 링크를 입력하면 분석이 시작되고, 사용자는 기다리는 동안 짧은 설문에 답합니다. 이후 인스타그램 분석과 설문 조건을 합쳐 다음 결과를 제공합니다.
+
+- 한국어 여행 페르소나와 상세 추천 사유
+- 분석에 사용된 이미지 근거와 취향 키워드 칩
+- 이동 가능 시간, 예산, 여행 월, 일정 밀도, 꼭 포함하고 싶은 활동을 반영한 추천 도시
+- Day별 일정, Google Maps 장소 링크, 혼잡 회피용 Plan B
+- 항공/교통, 숙소, 맛집, 레저 예약으로 이어질 수 있는 비즈니스 구좌
+- 여행 월 기준 날씨, 우기/건기, 준비물과 주의사항
+
+## How It Works
+
+1. 사용자가 인스타그램 프로필 URL을 입력하면 서버에서 공개 프로필 데이터를 수집합니다.
+2. 크롤링과 동시에 설문이 진행되어 대기 시간을 여행 조건 수집 시간으로 바꿉니다.
+3. Gemini/Gemini Vision이 피드 이미지, 캡션, 위치, 메타데이터를 분석해 취향 신호를 추출합니다.
+4. 설문 답변과 취향 신호를 결합해 추천 도시를 정렬합니다.
+5. 고정된 후보 도시 세트를 기반으로 LLM이 장소 설명, 일정 이유, 날씨 조언, 예약 구좌 문구를 보강합니다.
+
+## Implemented MVP
+
+- Next.js 기반 모바일 우선 플로우
+- 인스타그램 공개 `web_profile_info` 파싱, SEO/DOM/샘플 폴백
+- 분석 진행 상태와 설문 진행을 분리한 병렬 UX
+- 설문 스킵 시 인스타그램 분석만으로 추천 생성
+- 최근 피드 이미지를 기반으로 한 취향 칩과 이미지 근거 표시
+- 국내, 일본, 대만, 동남아, 싱가포르, 홍콩, 마카오 후보 도시 추천
+- 일정 밀도에 따라 하루 3/4/5개 장소를 생성
+- 선택 관심사에 맞춘 전시, 쇼핑, 카페, 맛집, 사진 스팟 반영
+- Day 칩으로 날짜별 일정 전환
+- 장소명을 Google Maps 검색 링크로 연결
+- Gemini API 실사용 경로와 deterministic fallback demo 지원
+
+## Business Model
+
+발표덱 기준 수익 모델은 예약 GMV 기반 어필리에이트입니다.
+
+- 항공/교통, 숙소, 레저, 맛집, 사진 스팟 예약 구좌로 전환 지점을 만듭니다.
+- 예약 GMV에 5-7% 어필리에이트 수수료를 적용합니다.
+- Gemini API와 Vercel 기준 추정 건당 비용은 약 300원으로, 예약 전환이 발생하면 높은 마진 구조를 기대할 수 있습니다.
 
 ## Run Locally
 
@@ -27,6 +70,8 @@ Reliable demo inputs:
 - `sample:cafe-gallery`
 - `sample:ocean-nature`
 - `sample:food-city`
+- `https://www.instagram.com/hsyang.johan/`
+- `https://www.instagram.com/chuucandoit/`
 
 Verification:
 
@@ -37,6 +82,7 @@ npm run build
 
 ## Docs
 
+- [Presentation deck source](./index.html)
 - [Hackathon guide summary](./CMUX_x_AIM_Hackathon_Guide_정리.md)
 - [TripPersona design spec](./docs/superpowers/specs/2026-04-26-trippersona-design.md)
 - [TripPersona implementation plan](./docs/superpowers/plans/2026-04-26-trippersona.md)
