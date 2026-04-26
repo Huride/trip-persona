@@ -87,6 +87,8 @@ const surveySchema = z.object({
   profileAnalysis: profileAnalysisSchema.optional()
 });
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const body = await request.json();
   const parsed = surveySchema.parse(body);

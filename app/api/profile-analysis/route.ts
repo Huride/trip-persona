@@ -6,6 +6,8 @@ const requestSchema = z.object({
   instagramUrl: z.string().min(1)
 });
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const { instagramUrl } = requestSchema.parse(await request.json());
   const result = await analyzeInstagramProfile(instagramUrl);
