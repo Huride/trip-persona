@@ -5,6 +5,15 @@ type PersonaTemplate = TravelPersona & { keywords: string[] };
 
 const templates: PersonaTemplate[] = [
   {
+    title: "Visual Destination Collector",
+    summary: "멋진 여행지와 사진이 잘 나오는 장면을 모아보는 여행자입니다.",
+    tasteTags: ["photo", "nature", "coastal", "city", "travel"],
+    pace: "balanced",
+    crowdTolerance: "medium",
+    confidenceNotes: ["keyword analysis: travel-destination"],
+    keywords: ["travel", "trip", "destination", "destinations", "wanderlust", "journey", "explore", "hotel", "resort", "여행"]
+  },
+  {
     title: "Dense City Food Explorer",
     summary: "로컬 미식과 도시 에너지를 짧고 밀도 있게 즐기는 여행자입니다.",
     tasteTags: ["food", "local-food", "city", "night", "packed"],
