@@ -11,13 +11,37 @@ The product analyzes an Instagram profile URL, asks for trip constraints while a
 
 ## Current Status
 
-This repository currently contains the product brief, hackathon guide summary, design spec, and implementation plan.
+This repository contains a working Next.js MVP with deterministic fallback demos, a server-side Gemini integration, and a best-effort Instagram ingestion path.
+
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+Reliable demo inputs:
+
+- `sample:cafe-gallery`
+- `sample:ocean-nature`
+- `sample:food-city`
+
+Verification:
+
+```bash
+npm test
+npm run build
+```
 
 ## Docs
 
 - [Hackathon guide summary](./CMUX_x_AIM_Hackathon_Guide_정리.md)
 - [TripPersona design spec](./docs/superpowers/specs/2026-04-26-trippersona-design.md)
 - [TripPersona implementation plan](./docs/superpowers/plans/2026-04-26-trippersona.md)
+- [Implementation progress](./docs/implementation-progress.md)
+- [Demo script](./docs/demo-script.md)
 
 ## Safety Notes
 
