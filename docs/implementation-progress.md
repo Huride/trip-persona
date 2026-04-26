@@ -25,6 +25,8 @@ Implemented:
 - Destination plans now keep a curated city/place set, then use Gemini as a bounded enrichment layer for recommendation copy, weather notes, business slot explanations, and day-by-day itinerary rationale.
 - Destination recommendation cards now include travel-month weather advice, preparation items, cautions, flight/transport, stay, leisure, food, and photo commerce slots.
 - Day-by-day itinerary UI now uses Day chips and shows one selected date at a time with concrete place names, area/duration labels, and Google Maps links.
+- Instagram ingestion now tries the public `web_profile_info` JSON path before browser scraping, so Vercel can read public feed images/captions without relying on Playwright.
+- Daily itinerary count now follows survey pace: slow uses 3 stops, balanced 4 stops, packed 5 stops; selected interests such as 전시, 쇼핑, 사진, 카페 are added as explicit stop candidates.
 - Persona reveal now explains Instagram-derived profile evidence, atmosphere, pace, crowd sensitivity, and recommendation evidence instead of showing ambiguous floating tags.
 - Survey progress now communicates AI taste analysis status; final analysis screen uses a circular loading state with animated status text.
 - YDS-inspired cyan UI refresh for a more practical dev MVP surface.
@@ -37,6 +39,7 @@ Verification:
 - Browser smoke: mobile sample submission completes entry, survey, persona reveal, and recommendations without horizontal overflow.
 - Browser smoke: mobile survey-skip path reaches recommendations without horizontal overflow.
 - Browser smoke: `sample:ocean-nature` with 8월 survey reaches persona reveal and recommendations; Day chip switching updates the itinerary, weather advice is shown, and Google Maps links are present.
+- API smoke: `hsyang.johan` returns `source: live` with 5 profile images from `Instagram public API`; packed pace with 전시/쇼핑/사진/카페 returns 5 stops on Day 1 and includes an exhibition route.
 - Live Instagram smoke: `https://www.instagram.com/beautifuldestinations/` returns `source: live`, a Korean persona title, and at least one evidence image.
 - Gemini key check: 9 configured keys checked; 3 usable. Usable keys were promoted to `GEMINI_API_KEY`, `GEMINI_API_KEY_1`, and `GEMINI_API_KEY_2`; expired/leaked keys were removed from local env files.
 - Instagram crawler check: public Instagram profile returned a login wall in this environment; app falls back to deterministic sample analysis.

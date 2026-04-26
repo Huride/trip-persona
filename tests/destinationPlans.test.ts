@@ -85,6 +85,31 @@ describe("buildDestinationPlans", () => {
     }
   });
 
+  it("builds more daily stops when the user asks for a packed pace", () => {
+    const [plan] = buildDestinationPlans(
+      [
+        {
+          destinationId: "tokyo",
+          destinationName: "도쿄",
+          fitScore: 94,
+          reason: "도시 감도와 전시 취향이 잘 맞습니다.",
+          tradeOff: "인기 지역은 혼잡할 수 있습니다."
+        }
+      ],
+      { ...survey, tripLength: "2n3d", pace: "packed", include: ["전시", "쇼핑", "사진", "카페"] }
+    );
+
+    expect(plan.dailyItinerary[0].items).toHaveLength(5);
+    expect(plan.dailyItinerary[0].items.map((item) => `${item.placeName} ${item.activity}`).join(" ")).toContain("전시");
+  });
+
+  it("keeps slow pace lighter than packed pace", () => {
+    const [slowPlan] = buildDestinationPlans(recommendations, { ...survey, pace: "slow" });
+    const [packedPlan] = buildDestinationPlans(recommendations, { ...survey, pace: "packed", include: ["전시", "쇼핑", "사진", "카페"] });
+
+    expect(slowPlan.dailyItinerary[0].items.length).toBeLessThan(packedPlan.dailyItinerary[0].items.length);
+  });
+
   it("adds weather preparation advice when the survey has a travel month", () => {
     const [plan] = buildDestinationPlans(
       [

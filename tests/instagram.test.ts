@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInstagramSeoHtml, selectInstagramFeedImages } from "../src/lib/instagram";
+import { parseInstagramSeoHtml, parseInstagramWebProfileInfo, selectInstagramFeedImages } from "../src/lib/instagram";
 
 describe("parseInstagramSeoHtml", () => {
   it("extracts public SEO profile metadata as usable live profile text", () => {
@@ -69,5 +69,60 @@ describe("selectInstagramFeedImages", () => {
         tags: expect.any(Array)
       }
     ]);
+  });
+});
+
+describe("parseInstagramWebProfileInfo", () => {
+  it("extracts feed images, captions, and locations from public web profile JSON", () => {
+    const result = parseInstagramWebProfileInfo(
+      {
+        data: {
+          user: {
+            username: "hsyang.johan",
+            full_name: "Johan",
+            biography: "",
+            edge_followed_by: { count: 121 },
+            edge_follow: { count: 150 },
+            edge_owner_to_timeline_media: {
+              count: 2,
+              edges: [
+                {
+                  node: {
+                    display_url: "https://cdn.example.com/feed-1.jpg",
+                    thumbnail_src: "https://cdn.example.com/feed-1-thumb.jpg",
+                    accessibility_caption: "Photo by Johan in 앤트러사이트 서교점.",
+                    edge_media_to_caption: { edges: [{ node: { text: "커피 마시러" } }] },
+                    location: { name: "앤트러사이트 서교점" },
+                    dimensions: { width: 1080, height: 809 }
+                  }
+                },
+                {
+                  node: {
+                    display_url: "https://cdn.example.com/feed-2.jpg",
+                    accessibility_caption: "Photo by Johan on January 10, 2020.",
+                    edge_media_to_caption: { edges: [{ node: { text: "#간만에드로잉" } }] },
+                    dimensions: { width: 1080, height: 1080 }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "https://www.instagram.com/hsyang.johan/"
+    );
+
+    expect(result).toEqual(expect.objectContaining({ source: "live", username: "hsyang.johan" }));
+    expect(result?.profileText).toContain("display name: Johan");
+    expect(result?.profileText).toContain("커피 마시러");
+    expect(result?.profileText).toContain("앤트러사이트 서교점");
+    expect(result?.profileImages).toHaveLength(2);
+    expect(result?.profileImages?.[0]).toEqual(
+      expect.objectContaining({
+        url: "https://cdn.example.com/feed-1.jpg",
+        alt: "Photo by Johan in 앤트러사이트 서교점.",
+        source: "Instagram public API"
+      })
+    );
   });
 });

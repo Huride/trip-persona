@@ -33,6 +33,15 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
     };
   }
 
+  let webProfile: InstagramProfileContent | null = null;
+  try {
+    webProfile = await fetchInstagramWebProfileInfo(instagramUrl);
+  } catch {
+    webProfile = null;
+  }
+
+  if (webProfile) return webProfile;
+
   let seoProfile: InstagramProfileContent | null = null;
   try {
     seoProfile = await fetchInstagramSeoProfile(instagramUrl);
@@ -150,6 +159,68 @@ export function selectInstagramFeedImages(rawImages: RawInstagramImage[], userna
     }));
 }
 
+export function parseInstagramWebProfileInfo(value: unknown, instagramUrl: string): InstagramProfileContent | null {
+  if (!value || typeof value !== "object") return null;
+  const user = (value as { data?: { user?: unknown } }).data?.user;
+  if (!user || typeof user !== "object") return null;
+
+  const record = user as Record<string, unknown>;
+  if (record.is_private === true) return null;
+
+  const username = typeof record.username === "string" ? record.username : extractUsername(instagramUrl);
+  const fullName = typeof record.full_name === "string" ? record.full_name : "";
+  const biography = typeof record.biography === "string" ? record.biography : "";
+  const followerCount = readNestedCount(record.edge_followed_by);
+  const followingCount = readNestedCount(record.edge_follow);
+  const media = readTimelineMedia(record.edge_owner_to_timeline_media);
+  const images = media
+    .map((node): ProfileEvidenceImage | null => {
+      const url = typeof node.display_url === "string"
+        ? decodeHtml(node.display_url)
+        : typeof node.thumbnail_src === "string"
+          ? decodeHtml(node.thumbnail_src)
+          : "";
+      const alt = typeof node.accessibility_caption === "string"
+        ? node.accessibility_caption
+        : `Photo by ${fullName || username}`;
+      if (!url) return null;
+      return {
+        url,
+        alt,
+        source: "Instagram public API",
+        tags: inferImageTags([
+          alt,
+          readCaptionText(node),
+          readLocationName(node)
+        ].filter(Boolean).join(" "))
+      };
+    })
+    .filter((image): image is ProfileEvidenceImage => Boolean(image))
+    .slice(0, 100);
+
+  const profileText = [
+    `username: ${username}`,
+    fullName ? `display name: ${fullName}` : "",
+    biography ? `bio: ${biography}` : "",
+    typeof followerCount === "number" ? `followers: ${followerCount}` : "",
+    typeof followingCount === "number" ? `following: ${followingCount}` : "",
+    ...media.map((node, index) => [
+      `feed image ${index + 1}: ${typeof node.accessibility_caption === "string" ? node.accessibility_caption : `Photo by ${fullName || username}`}`,
+      readCaptionText(node) ? `caption ${index + 1}: ${readCaptionText(node)}` : "",
+      readLocationName(node) ? `location ${index + 1}: ${readLocationName(node)}` : ""
+    ].filter(Boolean).join("\n"))
+  ].filter(Boolean).join("\n");
+
+  if (!isUsableProfileText(profileText) && images.length === 0) return null;
+
+  return {
+    source: "live",
+    username,
+    profileText,
+    profileImages: images
+  };
+}
+
 function extractUsername(url: string): string {
   try {
     const parsed = new URL(url);
@@ -170,6 +241,27 @@ async function fetchInstagramSeoProfile(instagramUrl: string): Promise<Instagram
   if (!response.ok) return null;
   const html = await response.text();
   return parseInstagramSeoHtml(html, instagramUrl);
+}
+
+async function fetchInstagramWebProfileInfo(instagramUrl: string): Promise<InstagramProfileContent | null> {
+  const username = extractUsername(instagramUrl);
+  if (!username || username === "instagram") return null;
+  const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`, {
+    headers: {
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      "accept": "*/*",
+      "accept-language": "en-US,en;q=0.9,ko;q=0.8",
+      "referer": `https://www.instagram.com/${username}/`,
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-origin",
+      "x-ig-app-id": "936619743392459",
+      "x-requested-with": "XMLHttpRequest"
+    },
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) return null;
+  return parseInstagramWebProfileInfo(await response.json(), instagramUrl);
 }
 
 async function fetchInstagramDomProfile(instagramUrl: string, username: string): Promise<InstagramProfileContent | null> {
@@ -357,6 +449,45 @@ function buildMirrorImageAlt(url: string): string {
     .replace(/-documents$/i, "")
     .replace(/[-_]/g, " ")
     .trim();
+}
+
+function readNestedCount(value: unknown): number | null {
+  if (!value || typeof value !== "object") return null;
+  const count = (value as { count?: unknown }).count;
+  return typeof count === "number" ? count : null;
+}
+
+function readTimelineMedia(value: unknown): Array<Record<string, unknown>> {
+  if (!value || typeof value !== "object") return [];
+  const edges = (value as { edges?: unknown }).edges;
+  if (!Array.isArray(edges)) return [];
+  return edges
+    .map((edge) => edge && typeof edge === "object" ? (edge as { node?: unknown }).node : null)
+    .filter((node): node is Record<string, unknown> => Boolean(node && typeof node === "object"));
+}
+
+function readCaptionText(node: Record<string, unknown>): string {
+  const caption = node.edge_media_to_caption;
+  if (!caption || typeof caption !== "object") return "";
+  const edges = (caption as { edges?: unknown }).edges;
+  if (!Array.isArray(edges)) return "";
+  return edges
+    .map((edge) => {
+      if (!edge || typeof edge !== "object") return "";
+      const captionNode = (edge as { node?: unknown }).node;
+      if (!captionNode || typeof captionNode !== "object") return "";
+      const text = (captionNode as { text?: unknown }).text;
+      return typeof text === "string" ? text : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function readLocationName(node: Record<string, unknown>): string {
+  const location = node.location;
+  if (!location || typeof location !== "object") return "";
+  const name = (location as { name?: unknown }).name;
+  return typeof name === "string" ? name : "";
 }
 
 async function fetchInstagramBodyText(instagramUrl: string): Promise<string> {

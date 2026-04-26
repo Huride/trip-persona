@@ -239,6 +239,7 @@ function buildStopPool(destinationId: DestinationId, destinationName: string, ba
       mapUrl: mapSearchUrl(`${destinationName} ${restaurant.name}`),
       planB: "웨이팅이 길면 숙소 근처 캐주얼 다이닝이나 포장 가능한 로컬 메뉴로 바꾸세요."
     })),
+    ...buildInterestStops(destinationName, survey),
     ...buildGeneratedStops(destinationName, survey)
   ];
 
@@ -277,23 +278,93 @@ function buildDayItems(destinationName: string, stopPool: StopCandidate[], seed:
     : pick(0);
   used.add(firstStop.placeName);
 
-  const secondStop = pick(dayIndex === 0 ? 0 : 1);
-  const thirdStop = pick(dayIndex === 0 ? 1 : 2);
-
-  return [
+  const times = itineraryTimesForPace(survey.pace, dayIndex);
+  const items: ItineraryItem[] = [
     {
-      time: dayIndex === 0 ? "11:00" : "10:00",
+      time: times[0] ?? (dayIndex === 0 ? "11:00" : "10:00"),
       ...normalizeWalking(firstStop, survey)
-    },
-    {
-      time: "14:00",
-      ...normalizeWalking(secondStop, survey)
-    },
-    {
-      time: "18:30",
-      ...normalizeWalking(thirdStop, survey)
     }
   ];
+
+  for (let index = 1; index < times.length; index += 1) {
+    items.push({
+      time: times[index],
+      ...normalizeWalking(pick(dayIndex === 0 ? index - 1 : index), survey)
+    });
+  }
+
+  return items;
+}
+
+function itineraryTimesForPace(pace: TripSurvey["pace"], dayIndex: number): string[] {
+  const start = dayIndex === 0 ? "11:00" : "10:00";
+  if (pace === "packed") return [start, "12:30", "15:00", "17:30", "20:00"];
+  if (pace === "balanced") return [start, "13:00", "16:00", "19:00"];
+  return [start, "14:00", "18:30"];
+}
+
+function buildInterestStops(destinationName: string, survey: TripSurvey): StopCandidate[] {
+  const candidates: Record<string, StopCandidate> = {
+    "전시": {
+      placeName: `${destinationName} 전시/갤러리`,
+      area: "전시",
+      activity: "현재 열려 있는 전시나 미디어아트 공간을 예약해 실내에서 취향 장면을 채우는 시간",
+      fitRationale: "설문에서 전시를 선택했기 때문에 날씨와 상관없는 감도 높은 실내 일정을 우선 반영했습니다.",
+      cost: "medium",
+      walkingLoad: "low",
+      durationMinutes: 90,
+      mapUrl: mapSearchUrl(`${destinationName} 전시 갤러리`),
+      planB: "인기 전시가 매진이면 같은 권역의 디자인 숍, 북카페, 미술관 상설전으로 바꾸세요."
+    },
+    "쇼핑": {
+      placeName: `${destinationName} 편집숍/쇼핑 동선`,
+      area: "쇼핑",
+      activity: "편집숍, 브랜드 쇼룸, 기념품 후보를 한 권역에서 비교하는 코스",
+      fitRationale: "설문에서 쇼핑을 선택해 여행 취향을 물건과 공간으로 확인하는 시간을 넣었습니다.",
+      cost: "medium",
+      walkingLoad: "medium",
+      durationMinutes: 75,
+      mapUrl: mapSearchUrl(`${destinationName} 편집숍 쇼핑`),
+      planB: "쇼핑 피로가 크면 한 곳만 보고 근처 카페나 식사로 전환하세요."
+    },
+    "카페": {
+      placeName: `${destinationName} 감도 카페`,
+      area: "카페",
+      activity: "동선 중간에 쉬면서 사진을 정리하고 다음 장소를 고르는 카페 타임",
+      fitRationale: "설문에서 카페를 선택해 일정 중간의 회복 시간과 취향 공간을 함께 배치했습니다.",
+      cost: "medium",
+      walkingLoad: "low",
+      durationMinutes: 60,
+      mapUrl: mapSearchUrl(`${destinationName} 카페`),
+      planB: "만석이면 같은 역 주변의 조용한 베이커리나 티룸으로 대체하세요."
+    },
+    "맛집": {
+      placeName: `${destinationName} 로컬 맛집`,
+      area: "식사",
+      activity: "현지 대표 메뉴를 부담 없는 식당에서 먹고 동네 분위기를 함께 보는 시간",
+      fitRationale: "설문에서 맛집을 선택해 식사를 이동 중간의 보조가 아니라 일정의 목적지로 반영했습니다.",
+      cost: "medium",
+      walkingLoad: "low",
+      durationMinutes: 90,
+      mapUrl: mapSearchUrl(`${destinationName} 로컬 맛집`),
+      planB: "웨이팅이 길면 예약 가능한 같은 메뉴 식당이나 포장 가능한 로컬 메뉴로 바꾸세요."
+    },
+    "사진": {
+      placeName: `${destinationName} 포토 스팟`,
+      area: "사진",
+      activity: "여행지의 분위기가 가장 잘 드러나는 배경에서 사진을 남기는 짧은 루트",
+      fitRationale: "설문에서 사진을 선택해 하루에 한 번은 확실한 기록 장면을 만들도록 배치했습니다.",
+      cost: "low",
+      walkingLoad: "medium",
+      durationMinutes: 60,
+      mapUrl: mapSearchUrl(`${destinationName} 포토 스팟`),
+      planB: "비가 오면 전망 좋은 실내 공간이나 호텔/쇼핑몰 포토존으로 바꾸세요."
+    }
+  };
+
+  return survey.include
+    .map((item) => candidates[item])
+    .filter((item): item is StopCandidate => Boolean(item));
 }
 
 function buildGeneratedStops(destinationName: string, survey: TripSurvey): StopCandidate[] {
