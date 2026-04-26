@@ -14,6 +14,15 @@ const templates: PersonaTemplate[] = [
     keywords: ["travel", "trip", "destination", "destinations", "wanderlust", "journey", "explore", "hotel", "resort", "여행"]
   },
   {
+    title: "트렌디한 소셜 장면 수집가",
+    summary: "사람들과 함께 만드는 활기 있는 장면과 사진으로 남기기 좋은 트렌디한 장소를 선호하는 여행자입니다.",
+    tasteTags: ["social-gathering", "trendy-spots", "photo-worthy", "activity-focused", "city-tour"],
+    pace: "packed",
+    crowdTolerance: "medium",
+    confidenceNotes: ["keyword analysis: social-trend"],
+    keywords: ["instagram update", "collab", "social", "sns", "trend", "trendy", "pop-up", "stage", "nmixx", "billlie", "wooah", "wjsn", "chuu", "tsuki", "nana", "dayoung", "yves", "함께"]
+  },
+  {
     title: "도시 미식 탐험가",
     summary: "로컬 미식과 도시 에너지를 짧고 밀도 있게 즐기는 여행자입니다.",
     tasteTags: ["food", "local-food", "city", "night", "packed"],

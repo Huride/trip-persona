@@ -23,6 +23,15 @@ describe("analyzeProfileText", () => {
     expect(result.tasteTags).toContain("local-neighborhood");
     expect(result.tasteTags).not.toContain("ocean");
   });
+
+  it("maps public mirror collaboration feeds to social trend taste instead of food fallback", () => {
+    const result = analyzeProfileText("chuucandoit Instagram Update with NMIXX BAE Jiwoo Billlie Tsuki WOOAH Nana", "chuucandoit");
+
+    expect(result.title).toContain("소셜");
+    expect(result.tasteTags).toContain("social-gathering");
+    expect(result.tasteTags).toContain("trendy-spots");
+    expect(result.tasteTags).not.toContain("food");
+  });
 });
 
 describe("selectFallbackSampleId", () => {

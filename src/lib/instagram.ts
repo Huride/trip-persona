@@ -223,13 +223,13 @@ async function loadRecentInstagramImages(page: Page): Promise<void> {
 
 async function fetchKnownPublicMirrorImages(username: string): Promise<ProfileEvidenceImage[]> {
   if (username.toLowerCase() === "chuucandoit") {
-    return CHUUCANDOIT_PUBLIC_MIRROR_IMAGE_URLS.map((url, index) => {
+    return CHUUCANDOIT_PUBLIC_MIRROR_IMAGE_URLS.map((url) => {
       const alt = buildMirrorImageAlt(url);
       return {
         url,
         alt,
         source: "Instagram public mirror",
-        tags: inferMirrorImageTags(index)
+        tags: inferImageTags(alt)
       };
     });
   }
@@ -269,7 +269,7 @@ async function fetchKnownPublicMirrorImages(username: string): Promise<ProfileEv
           url,
           alt,
           source: "Instagram public mirror",
-          tags: inferMirrorImageTags(images.length)
+          tags: inferImageTags(alt)
         });
       }
     } catch {
@@ -297,31 +297,22 @@ const CHUUCANDOIT_PUBLIC_MIRROR_IMAGE_URLS = [
   "https://kpopping.com/documents/93/4/240129-chuucandoit-Instagram-Update-with-Yves-documents-4.jpeg"
 ];
 
-function inferMirrorImageTags(index: number): string[] {
-  const buckets = [
-    ["trendy-spots", "photo-worthy", "photography", "instagrammable"],
-    ["social-gathering", "social-gatherings", "social-travel", "collaboration-centric"],
-    ["city", "city-tour", "urban-exploration"],
-    ["food", "trendy-cafes"],
-    ["local-food"],
-    ["active", "active-vibes", "active-experience", "activity-focused", "interactive-experiences", "packed"],
-    ["night", "vibrant-energy", "pop-up-stores"]
-  ];
-  return buckets[index % buckets.length];
-}
-
-function inferImageTags(text: string, index = 0): string[] {
+function inferImageTags(text: string): string[] {
   const normalized = text.toLowerCase();
   const tags = new Set<string>();
-  if (/(cafe|coffee|카페|커피|food|restaurant|맛|미식)/.test(normalized)) {
+  if (/(cafe|coffee|카페|커피|anthracite|앤트러사이트)/.test(normalized)) {
+    tags.add("cafe-hopping");
+    tags.add("specialty-coffee");
+  }
+  if (/(food|restaurant|dining|market|dish|meal|맛|미식|식당|음식|요리)/.test(normalized)) {
     tags.add("food");
     tags.add("local-food");
-    tags.add("trendy-cafes");
   }
-  if (/(city|urban|서울|tokyo|osaka|street|tour)/.test(normalized)) {
+  if (/(city|urban|seoul|서울|tokyo|osaka|street|tour|dangsan|seogyo|당산|서교|neighborhood|local)/.test(normalized)) {
     tags.add("city");
     tags.add("city-tour");
     tags.add("urban-exploration");
+    tags.add("local-neighborhood");
   }
   if (/(with|collab|bae|jiwoo|tsuki|nana|dayoung|yves|nmixx|billlie|wooah|wjsn|chuu)/.test(normalized)) {
     tags.add("social-gathering");
@@ -329,15 +320,25 @@ function inferImageTags(text: string, index = 0): string[] {
     tags.add("social-travel");
     tags.add("collaboration-centric");
   }
-  if (/(instagram|update|photo|sns|pop|trend|stage)/.test(normalized)) {
+  if (/(instagram|update|sns|pop|trend|stage|public mirror)/.test(normalized)) {
     tags.add("trendy-spots");
     tags.add("photo-worthy");
     tags.add("photography");
     tags.add("instagrammable");
   }
+  if (/(gallery|museum|exhibition|art|design|sketch|drawing|전시|미술|디자인|그림|스케치)/.test(normalized)) {
+    tags.add("gallery");
+    tags.add("design");
+    tags.add("aesthetic-spaces");
+  }
   if (/(eco|sustainable|green|nature|환경)/.test(normalized)) {
     tags.add("eco-friendly");
     tags.add("sustainable-travel");
+  }
+  if (/(sea|ocean|beach|island|바다|해변|섬)/.test(normalized)) {
+    tags.add("coastal");
+    tags.add("ocean");
+    tags.add("beach");
   }
   if (/(active|activity|workshop|experience|체험)/.test(normalized)) {
     tags.add("active");
@@ -346,16 +347,6 @@ function inferImageTags(text: string, index = 0): string[] {
     tags.add("activity-focused");
     tags.add("interactive-experiences");
   }
-  const buckets = [
-    ["trendy-spots", "photo-worthy", "photography", "instagrammable"],
-    ["social-gathering", "social-gatherings", "social-travel", "collaboration-centric"],
-    ["city", "city-tour", "urban-exploration"],
-    ["food", "trendy-cafes"],
-    ["local-food"],
-    ["active", "active-vibes", "active-experience", "activity-focused", "interactive-experiences", "packed"],
-    ["night", "vibrant-energy", "pop-up-stores"]
-  ];
-  for (const tag of buckets[index % buckets.length]) tags.add(tag);
   return [...tags];
 }
 

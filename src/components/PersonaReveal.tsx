@@ -13,9 +13,9 @@ interface PersonaRevealProps {
 
 export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealProps) {
   const insightCards = buildInsightCards(result);
-  const tasteTags = result.persona.tasteTags.slice(0, 5);
-  const [activeTag, setActiveTag] = useState(tasteTags[0] ?? "");
-  const selectedTag = tasteTags.includes(activeTag) ? activeTag : tasteTags[0];
+  const evidenceTags = buildEvidenceTags(result.profileImages ?? [], result.persona.tasteTagLabels);
+  const [activeTag, setActiveTag] = useState(evidenceTags[0]?.tag ?? ALL_IMAGES_TAG);
+  const selectedTag = evidenceTags.some((item) => item.tag === activeTag) ? activeTag : evidenceTags[0]?.tag ?? ALL_IMAGES_TAG;
   const visibleImages = getImagesForTag(result.profileImages ?? [], selectedTag);
 
   return (
@@ -34,20 +34,20 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
             {result.profileUsername ? <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-cyan-900">{formatInstagramHandle(result.profileUsername)}</span> : null}
           </div>
 
-          {tasteTags.length > 0 ? (
+          {evidenceTags.length > 0 ? (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {tasteTags.map((tag) => {
-                const isActive = selectedTag === tag;
+              {evidenceTags.map((item) => {
+                const isActive = selectedTag === item.tag;
                 return (
                   <button
-                    key={tag}
+                    key={item.tag}
                     type="button"
-                    onClick={() => setActiveTag(tag)}
+                    onClick={() => setActiveTag(item.tag)}
                     className={`h-10 shrink-0 rounded-full border px-4 text-[13px] font-extrabold transition ${
                       isActive ? "border-cyan-800 bg-white text-cyan-900 shadow-sm" : "border-cyan-200 bg-cyan-50 text-cyan-800"
                     }`}
                   >
-                    {labelPersonaTag(tag, result.persona.tasteTagLabels)}
+                    {item.label}
                   </button>
                 );
               })}
@@ -103,60 +103,33 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
   );
 }
 
+const ALL_IMAGES_TAG = "__all_images__";
+
+function buildEvidenceTags(images: ProfileEvidenceImage[], dynamicLabels?: Record<string, string>): Array<{ tag: string; label: string }> {
+  const imageIndexesByTag = new Map<string, number[]>();
+  for (const [index, image] of images.entries()) {
+    for (const tag of image.tags ?? []) {
+      imageIndexesByTag.set(tag, [...(imageIndexesByTag.get(tag) ?? []), index]);
+    }
+  }
+
+  const seenImageSets = new Set<string>();
+  const tags = [...imageIndexesByTag.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .flatMap(([tag, indexes]) => {
+      const imageSetKey = indexes.join(",");
+      if (seenImageSets.has(imageSetKey)) return [];
+      seenImageSets.add(imageSetKey);
+      return [{ tag, label: labelPersonaTag(tag, dynamicLabels) }];
+    })
+    .slice(0, 7);
+
+  return tags.length > 0 ? tags : [{ tag: ALL_IMAGES_TAG, label: "피드 이미지" }];
+}
+
 function getImagesForTag(images: ProfileEvidenceImage[], tag?: string): ProfileEvidenceImage[] {
-  if (!tag || images.length === 0) return images;
-  const matched = images.filter((image, index) => imageMatchesTag(image, tag, index));
-  if (matched.length > 0) return matched.slice(0, 6);
-
-  const bucket = hashTag(tag) % Math.min(5, images.length);
-  return images.filter((_, index) => index % Math.min(5, images.length) === bucket).slice(0, 6);
-}
-
-function hashTag(tag: string): number {
-  return [...tag].reduce((sum, char) => sum + char.charCodeAt(0), 0);
-}
-
-function imageMatchesTag(image: ProfileEvidenceImage, tag: string, index: number): boolean {
-  const text = `${image.alt} ${image.source}`.toLowerCase();
-  if (image.tags?.includes(tag)) return true;
-  if (
-    [
-      "eco-friendly",
-      "sustainable-travel",
-      "trendy-spots",
-      "instagrammable",
-      "active",
-      "pop-up-stores",
-      "aesthetic-cafes",
-      "social-travel",
-      "social-gatherings",
-      "interactive-experiences",
-      "vibrant-energy",
-      "photo-worthy",
-      "photography",
-      "active-vibes",
-      "active-experience",
-      "collaboration-centric"
-    ].includes(tag)
-  ) {
-    return /photo by|cafe|coffee|카페|pop-up|workshop|activity|eco|sustainable/.test(text);
-  }
-  if (["specialty-coffee", "cafe-hopping", "trendy-cafes", "cafes"].includes(tag)) {
-    return /cafe|coffee|카페|커피|앤트러사이트|서교/.test(text);
-  }
-  if (["minimalism", "minimalist-aesthetic", "aesthetic-spaces", "design", "gallery"].includes(tag)) {
-    return /sketch|drawing|art|gallery|전시|미술|앤트러사이트|서교/.test(text) || [0, 1, 3, 4].includes(index);
-  }
-  if (["local-neighborhood", "urban-exploration", "city", "urban", "walk", "local"].includes(tag)) {
-    return /서울|당산|서교|local|city|street|neighborhood|in\s/.test(text);
-  }
-  if (["coastal", "ocean", "beach"].includes(tag)) {
-    return /sea|ocean|beach|바다|해변|island/.test(text);
-  }
-  if (["food", "local-food"].includes(tag)) {
-    return /food|restaurant|cafe|맛|식당|카페|market/.test(text);
-  }
-  return false;
+  if (!tag || tag === ALL_IMAGES_TAG || images.length === 0) return images.slice(0, 12);
+  return images.filter((image) => image.tags?.includes(tag)).slice(0, 12);
 }
 
 function formatInstagramHandle(username: string): string {
