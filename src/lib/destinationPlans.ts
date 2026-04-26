@@ -33,8 +33,8 @@ interface CuratedStop {
 }
 
 const destinationPhotos: Record<DestinationId, DestinationPlan["photo"]> = {
-  seoul: { url: "https://images.unsplash.com/photo-1538485399081-7c8ed9b1f5e1?auto=format&fit=crop&w=1200&q=80", alt: "서울 도심과 한강 야경", credit: "Unsplash" },
-  jeju: { url: "https://images.unsplash.com/photo-1579169825453-8d4b465bb4e1?auto=format&fit=crop&w=1200&q=80", alt: "제주 바다와 해안 풍경", credit: "Unsplash" },
+  seoul: { url: "https://images.unsplash.com/photo-1476711591957-6d829ab9634b?auto=format&fit=crop&w=1200&q=80", alt: "서울 도심 야경", credit: "Unsplash" },
+  jeju: { url: "https://images.unsplash.com/photo-1678284948899-61928681946e?auto=format&fit=crop&w=1200&q=80", alt: "제주 바다와 한라산 풍경", credit: "Unsplash" },
   busan: { url: "https://images.unsplash.com/photo-1604999333679-b86d54738315?auto=format&fit=crop&w=1200&q=80", alt: "부산 해안 도시 풍경", credit: "Unsplash" },
   mokpo: { url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80", alt: "목포 항구 도시 골목", credit: "Unsplash" },
   namhae: { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80", alt: "남해 조용한 해안", credit: "Unsplash" },
@@ -89,14 +89,14 @@ const curatedStopSeeds: Partial<Record<DestinationId, Array<[string, string, str
 
 const planSeeds: Partial<Record<DestinationId, DestinationPlanSeed>> = {
   seoul: {
-    photo: { url: "https://images.unsplash.com/photo-1538485399081-7c8ed9b1f5e1?auto=format&fit=crop&w=1200&q=80", alt: "서울 도심과 한강 야경", credit: "Unsplash" },
+    photo: { url: "https://images.unsplash.com/photo-1476711591957-6d829ab9634b?auto=format&fit=crop&w=1200&q=80", alt: "서울 도심 야경", credit: "Unsplash" },
     transport: item("지하철 중심 이동", "T-money 또는 교통카드", "짧은 동선과 높은 접근성이 서울 여행 강점입니다."),
     stays: item("성수/종로 부티크 호텔", "카페와 전시 접근성 우선", "취향 장소 사이 이동 시간을 줄일 수 있습니다."),
     restaurants: item("을지로 로컬 다이닝", "노포와 캐주얼 바", "도시형 미식과 야경 취향을 함께 만족시킵니다."),
     photoSpots: item("서촌 골목", "낮은 채도의 골목 사진", "조용한 도시 산책 취향과 잘 맞습니다.")
   },
   jeju: {
-    photo: { url: "https://images.unsplash.com/photo-1579169825453-8d4b465bb4e1?auto=format&fit=crop&w=1200&q=80", alt: "제주 바다와 해안 풍경", credit: "Unsplash" },
+    photo: { url: "https://images.unsplash.com/photo-1678284948899-61928681946e?auto=format&fit=crop&w=1200&q=80", alt: "제주 바다와 한라산 풍경", credit: "Unsplash" },
     transport: item("제주 항공 + 렌터카", "김포-제주 왕복, 1-2일 렌터카", "해안도로와 카페를 낮은 도보로 연결하기 좋습니다."),
     stays: item("애월/협재 감성 숙소", "바다 접근성이 좋은 숙소", "휴식과 노을 사진 취향에 맞습니다."),
     restaurants: item("해산물 로컬 식당", "갈치, 해물라면, 바다 전망 카페", "바다 중심 여행의 만족도를 높입니다."),

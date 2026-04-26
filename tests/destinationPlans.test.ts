@@ -129,4 +129,29 @@ describe("buildDestinationPlans", () => {
     expect(plan.weather.preparation).toContain("작은 우산 또는 얇은 우비");
     expect(plan.weather.cautions.join(" ")).toContain("소나기");
   });
+
+  it("uses live city image URLs for Seoul and Jeju hero photos", () => {
+    const plans = buildDestinationPlans(
+      [
+        {
+          destinationId: "seoul",
+          destinationName: "서울",
+          fitScore: 90,
+          reason: "도시 취향이 잘 맞습니다.",
+          tradeOff: "혼잡 시간대를 피하는 편이 좋습니다."
+        },
+        {
+          destinationId: "jeju",
+          destinationName: "제주",
+          fitScore: 88,
+          reason: "바다와 휴식 취향이 잘 맞습니다.",
+          tradeOff: "날씨 영향을 받을 수 있습니다."
+        }
+      ],
+      survey
+    );
+
+    expect(plans[0].photo.url).toContain("photo-1476711591957-6d829ab9634b");
+    expect(plans[1].photo.url).toContain("photo-1678284948899-61928681946e");
+  });
 });

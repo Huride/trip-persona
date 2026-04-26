@@ -5,6 +5,8 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import type { DestinationPlan, RecommendationItem, TripPersonaResult } from "@/src/lib/types";
 
+const fallbackDestinationPhoto = "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80";
+
 interface DestinationRecommendationsProps {
   result: TripPersonaResult;
   onBack: () => void;
@@ -52,7 +54,7 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
 
         <WeatherCard plan={active} />
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2">
           <RecommendationCard icon={<Plane size={17} />} title="항공/교통" item={active.transport[0]} />
           <RecommendationCard icon={<Hotel size={17} />} title="숙소" item={active.stays[0]} />
           <RecommendationCard icon={<Ticket size={17} />} title="레저" item={active.activities[0]} />
@@ -117,7 +119,16 @@ function DestinationHero({ plan }: { plan: DestinationPlan }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
       <div className="relative h-48 bg-cyan-100">
-        <img src={plan.photo.url} alt={plan.photo.alt} className="h-full w-full object-cover" />
+        <img
+          src={plan.photo.url}
+          alt={plan.photo.alt}
+          className="h-full w-full object-cover"
+          onError={(event) => {
+            if (event.currentTarget.dataset.fallbackApplied) return;
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = fallbackDestinationPhoto;
+          }}
+        />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
           <p className="text-[12px] font-extrabold">Top match · FIT {plan.destination.fitScore}</p>
           <h1 className="text-[28px] font-extrabold leading-8">{plan.destination.destinationName}</h1>
@@ -162,17 +173,17 @@ function WeatherCard({ plan }: { plan: DestinationPlan }) {
 
 function RecommendationCard({ icon, title, item, compact = false }: { icon: ReactNode; title: string; item?: RecommendationItem; compact?: boolean }) {
   return (
-    <article className="grid min-h-36 gap-2 rounded-xl border border-line bg-surface p-3 shadow-sm">
+    <article className="grid min-h-52 w-[82%] min-w-[300px] shrink-0 snap-start gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
       <div className="flex items-center gap-2 text-[13px] font-extrabold text-cyan-900">
         {icon}
         {title}
       </div>
       <div>
-        <h3 className="text-[14px] font-extrabold leading-5">{item?.name}</h3>
-        <p className="mt-1 text-[12px] leading-4 text-muted">{item?.summary}</p>
-        {!compact && item?.why ? <p className="mt-2 rounded-lg bg-cyan-50 p-2 text-[11px] font-bold leading-4 text-cyan-950">{item.why}</p> : null}
+        <h3 className="text-[18px] font-extrabold leading-6">{item?.name}</h3>
+        <p className="mt-2 text-[14px] leading-5 text-muted">{item?.summary}</p>
+        {!compact && item?.why ? <p className="mt-3 rounded-lg bg-cyan-50 p-3 text-[13px] font-bold leading-5 text-cyan-950">{item.why}</p> : null}
         {item?.ctaUrl ? (
-          <a href={item.ctaUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex w-full justify-center rounded-lg bg-ink px-3 py-2 text-[12px] font-extrabold text-white">
+          <a href={item.ctaUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex w-full justify-center rounded-lg bg-ink px-3 py-3 text-[14px] font-extrabold text-white">
             {item.ctaLabel ?? "확인하기"}
           </a>
         ) : null}
