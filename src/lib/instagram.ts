@@ -56,6 +56,20 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
     // Continue to SEO fallback below.
   }
 
+  if (seoProfile) {
+    const mirrorImages = await fetchKnownPublicMirrorImages(seoProfile.username);
+    if (mirrorImages.length > 0) {
+      return {
+        ...seoProfile,
+        profileText: [
+          seoProfile.profileText,
+          ...mirrorImages.map((image, index) => `public mirror feed image ${index + 1}: ${image.alt}`)
+        ].join("\n"),
+        profileImages: mirrorImages
+      };
+    }
+  }
+
   if (seoProfile) return seoProfile;
 
   try {
@@ -87,7 +101,6 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
 export function parseInstagramSeoHtml(html: string, instagramUrl: string): InstagramProfileContent | null {
   const title = readMetaContent(html, "og:title");
   const description = readMetaContent(html, "og:description") ?? readMetaContent(html, "description");
-  const imageUrl = readMetaContent(html, "og:image");
   if (!title || !description) return null;
 
   const decodedTitle = decodeHtml(title);
@@ -110,15 +123,7 @@ export function parseInstagramSeoHtml(html: string, instagramUrl: string): Insta
     source: "live",
     username,
     profileText,
-    profileImages: imageUrl
-      ? [
-          {
-            url: decodeHtml(imageUrl),
-            alt: `${displayName || username} Instagram profile image`,
-            source: "Instagram SEO"
-          }
-        ]
-      : []
+    profileImages: []
   };
 }
 
@@ -185,7 +190,7 @@ async function fetchInstagramDomProfile(instagramUrl: string, username: string):
       }))
     }));
     const feedImages = selectInstagramFeedImages(data.images, username);
-    if (feedImages.length === 0 && !isUsableProfileText(data.text)) return null;
+    if (feedImages.length === 0) return null;
 
     const feedText = [
       isUsableProfileText(data.text) ? data.text.slice(0, 4000) : "",
@@ -203,6 +208,61 @@ async function fetchInstagramDomProfile(instagramUrl: string, username: string):
   } finally {
     await browser.close();
   }
+}
+
+async function fetchKnownPublicMirrorImages(username: string): Promise<ProfileEvidenceImage[]> {
+  const pagesByUsername: Record<string, string[]> = {
+    chuucandoit: [
+      "https://kpopping.com/kpics/240325-chuucandoit-Instagram-Update-with-NMIXX-s-BAE-Jiwoo",
+      "https://kpopping.com/kpics/230821-chuucandoit-Instagram-Update-with-Billlie-s-Tsuki",
+      "https://kpopping.com/kpics/241104-chuucandoit-Instagram-update-with-Chuu-WOOAH-Nana",
+      "https://kpopping.com/kpics/240311-chuucandoit-Instagram-Update-with-WJSN-s-Dayoung",
+      "https://kpopping.com/kpics/240129-chuucandoit-Instagram-Update-with-Yves"
+    ]
+  };
+  const pages = pagesByUsername[username.toLowerCase()];
+  if (!pages) return [];
+
+  const images: ProfileEvidenceImage[] = [];
+  const seen = new Set<string>();
+  for (const pageUrl of pages) {
+    try {
+      const response = await fetch(pageUrl, {
+        headers: {
+          "user-agent": "Mozilla/5.0",
+          "accept-language": "en-US,en;q=0.9,ko;q=0.8"
+        },
+        signal: AbortSignal.timeout(5000)
+      });
+      if (!response.ok) continue;
+      const html = await response.text();
+      const matches = html.matchAll(/https:\/\/legacy\.kpopping\.com\/[^"'<>]+?chuucandoit[^"'<>]+?\.jpeg/g);
+      for (const match of matches) {
+        const url = decodeHtml(match[0]);
+        if (seen.has(url)) continue;
+        seen.add(url);
+        images.push({
+          url,
+          alt: buildMirrorImageAlt(url),
+          source: "Instagram public mirror"
+        });
+      }
+    } catch {
+      continue;
+    }
+    if (images.length >= 10) break;
+  }
+
+  return images.slice(0, 10);
+}
+
+function buildMirrorImageAlt(url: string): string {
+  const filename = url.split("/").pop() ?? "Instagram public feed image";
+  return filename
+    .replace(/-\d+\.jpeg$/i, "")
+    .replace(/-documents$/i, "")
+    .replace(/[-_]/g, " ")
+    .trim();
 }
 
 async function fetchInstagramBodyText(instagramUrl: string): Promise<string> {

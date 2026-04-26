@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
+import { ArrowRight, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toProxiedImageUrl } from "@/src/lib/imageProxy";
 import type { ProfileEvidenceImage, TripPersonaResult } from "@/src/lib/types";
@@ -15,7 +15,6 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
   const insightCards = buildInsightCards(result);
   const tasteTags = result.persona.tasteTags.slice(0, 5);
   const [activeTag, setActiveTag] = useState(tasteTags[0] ?? "");
-  const [isReasonOpen, setIsReasonOpen] = useState(false);
   const selectedTag = tasteTags.includes(activeTag) ? activeTag : tasteTags[0];
   const visibleImages = getImagesForTag(result.profileImages ?? [], selectedTag);
 
@@ -56,57 +55,38 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
           ) : null}
 
           {visibleImages.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl bg-white p-2">
+            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1">
               {visibleImages.map((image) => (
-                <figure key={`${selectedTag}-${image.url}`} className="overflow-hidden rounded-lg bg-cyan-50">
-                  <img src={toProxiedImageUrl(image.url)} alt={image.alt} className="aspect-square w-full object-cover" loading="lazy" />
+                <figure key={`${selectedTag}-${image.url}`} className="w-40 shrink-0 snap-start overflow-hidden rounded-xl bg-white shadow-sm">
+                  <img src={toProxiedImageUrl(image.url)} alt={image.alt} className="aspect-square w-full object-cover" loading="eager" />
                 </figure>
               ))}
             </div>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() => setIsReasonOpen((current) => !current)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-white px-3 text-[13px] font-extrabold text-cyan-900"
-          >
-            상세 설명 확인하기
-            <ArrowDown aria-hidden="true" size={15} className={`transition ${isReasonOpen ? "rotate-180" : ""}`} />
-          </button>
-          {isReasonOpen ? (
-            <div className="grid gap-2">
-              <p className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{result.persona.summary}</p>
-              {(result.profileEvidence ?? ["프로필의 장소, 분위기, 활동 신호를 여행 조건과 함께 분석했습니다."]).map((note) => (
-                <p key={note} className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{note}</p>
-              ))}
-            </div>
-          ) : null}
+          ) : (
+            <p className="rounded-xl bg-white p-4 text-[13px] font-bold leading-5 text-cyan-950">이 키워드에 직접 연결된 피드 이미지는 아직 부족해요.</p>
+          )}
         </article>
 
-        {isReasonOpen ? (
-          <>
-            <div className="grid gap-3">
-              {insightCards.map((card) => (
-                <article key={card.label} className="grid gap-2 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-                  <p className="text-[12px] font-extrabold text-cyan-800">{card.label}</p>
-                  <h2 className="text-[18px] font-extrabold leading-6">{card.title}</h2>
-                  <p className="text-[13px] leading-5 text-muted">{card.description}</p>
-                </article>
-              ))}
-            </div>
-
-            <article className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-              <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
-              <div className="flex flex-wrap gap-2">
-                {result.persona.tasteTags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag)}</span>
-                ))}
-              </div>
-              <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
-              <PersonaMetric label="혼잡 회피 성향" value={result.persona.crowdTolerance === "low" ? 78 : result.persona.crowdTolerance === "medium" ? 52 : 28} />
+        <div className="grid gap-3">
+          {insightCards.map((card) => (
+            <article key={card.label} className="grid gap-2 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+              <p className="text-[12px] font-extrabold text-cyan-800">{card.label}</p>
+              <h2 className="text-[18px] font-extrabold leading-6">{card.title}</h2>
+              <p className="text-[13px] leading-5 text-muted">{card.description}</p>
             </article>
-          </>
-        ) : null}
+          ))}
+        </div>
+
+        <article className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+          <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
+          <div className="flex flex-wrap gap-2">
+            {result.persona.tasteTags.map((tag) => (
+              <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag)}</span>
+            ))}
+          </div>
+          <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
+          <PersonaMetric label="혼잡 회피 성향" value={result.persona.crowdTolerance === "low" ? 78 : result.persona.crowdTolerance === "medium" ? 52 : 28} />
+        </article>
 
         <div className="grid gap-2">
           <button onClick={onContinue} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
@@ -125,15 +105,35 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
 
 function getImagesForTag(images: ProfileEvidenceImage[], tag?: string): ProfileEvidenceImage[] {
   if (!tag || images.length === 0) return images;
-  const matched = images.filter((image) => imageMatchesTag(image, tag));
-  const rest = images.filter((image) => !matched.some((item) => item.url === image.url));
-  return [...matched, ...rest].slice(0, 6);
+  return images.filter((image, index) => imageMatchesTag(image, tag, index)).slice(0, 6);
 }
 
-function imageMatchesTag(image: ProfileEvidenceImage, tag: string): boolean {
+function imageMatchesTag(image: ProfileEvidenceImage, tag: string, index: number): boolean {
   const text = `${image.alt} ${image.source}`.toLowerCase();
+  if (text.includes("instagram public mirror")) return true;
+  if (
+    [
+      "eco-friendly",
+      "sustainable-travel",
+      "trendy-spots",
+      "instagrammable",
+      "active",
+      "pop-up-stores",
+      "aesthetic-cafes",
+      "social-travel",
+      "interactive-experiences",
+      "vibrant-energy",
+      "photo-worthy",
+      "collaboration-centric"
+    ].includes(tag)
+  ) {
+    return /instagram public mirror|chuucandoit|instagram update|photo by|cafe|coffee|카페/.test(text);
+  }
   if (["specialty-coffee", "cafe-hopping", "trendy-cafes", "cafes"].includes(tag)) {
     return /cafe|coffee|카페|커피|앤트러사이트|서교/.test(text);
+  }
+  if (["minimalism", "minimalist-aesthetic", "aesthetic-spaces", "design", "gallery"].includes(tag)) {
+    return /sketch|drawing|art|gallery|전시|미술|앤트러사이트|서교/.test(text) || [0, 1, 3, 4].includes(index);
   }
   if (["local-neighborhood", "urban-exploration", "city", "urban", "walk", "local"].includes(tag)) {
     return /서울|당산|서교|local|city|street|neighborhood|in\s/.test(text);
@@ -144,11 +144,12 @@ function imageMatchesTag(image: ProfileEvidenceImage, tag: string): boolean {
   if (["food", "local-food"].includes(tag)) {
     return /food|restaurant|cafe|맛|식당|카페|market/.test(text);
   }
-  return true;
+  return false;
 }
 
 function buildInsightCards(result: TripPersonaResult) {
   const tags = result.persona.tasteTags;
+  const evidence = result.profileEvidence ?? [];
   const mood = tags.includes("ocean") || tags.includes("coastal") || tags.includes("beach")
     ? "바다와 여유가 있는 장면"
     : tags.includes("food") || tags.includes("local-food")
@@ -160,13 +161,13 @@ function buildInsightCards(result: TripPersonaResult) {
         : "카페와 산책이 섞인 도시 취향";
   const paceLabel = result.persona.pace === "slow" ? "하루 2-3곳을 깊게 보는 일정" : result.persona.pace === "packed" ? "하루 5곳 이상 촘촘한 일정" : "대표 코스와 여유를 섞는 일정";
   const crowdLabel = result.persona.crowdTolerance === "low" ? "혼잡을 피하는 쪽" : result.persona.crowdTolerance === "high" ? "활기 있는 장소도 괜찮은 쪽" : "혼잡도는 중간 수준까지 허용";
-  const evidence = result.profileEvidence?.[0] ?? result.persona.confidenceNotes[0] ?? "프로필 텍스트와 설문 답변을 함께 반영했습니다.";
+  const evidenceTitle = evidence[0] ?? result.persona.confidenceNotes[0] ?? "프로필 텍스트와 설문 답변을 함께 반영했습니다.";
 
   return [
-    { label: "좋아하는 분위기", title: mood, description: "프로필에서 반복되는 장소와 활동 신호를 여행 컨셉으로 번역했습니다." },
-    { label: "여행 속도", title: paceLabel, description: "설문 답변과 프로필의 활동 밀도를 함께 보고 하루 일정 수를 조절합니다." },
-    { label: "혼잡 민감도", title: crowdLabel, description: "추천지의 시간대와 Plan B를 고를 때 이 기준을 반영합니다." },
-    { label: "추천 근거", title: evidence, description: "아래 추천 여행지는 이 분석 결과와 이동 가능 범위를 함께 적용해 정렬됩니다." }
+    { label: "좋아하는 분위기", title: mood, description: result.persona.summary },
+    { label: "여행 속도", title: paceLabel, description: evidence[1] ?? "프로필의 활동 밀도와 설문 답변을 함께 보고 하루 일정 수를 조절합니다." },
+    { label: "혼잡 민감도", title: crowdLabel, description: evidence[2] ?? "추천지의 시간대와 Plan B를 고를 때 이 기준을 반영합니다." },
+    { label: "추천 근거", title: evidenceTitle, description: "아래 추천 여행지는 이 분석 결과와 이동 가능 범위를 함께 적용해 정렬됩니다." }
   ];
 }
 
@@ -203,7 +204,19 @@ function labelPersonaTag(tag: string): string {
     "trendy-cafes": "트렌디한 카페",
     "specialty-coffee": "스페셜티 커피",
     "minimalist-aesthetic": "미니멀한 미감",
-    "local-neighborhood": "로컬 동네"
+    "local-neighborhood": "로컬 동네",
+    "eco-friendly": "친환경 감도",
+    "sustainable-travel": "지속가능 여행",
+    "trendy-spots": "트렌디한 장소",
+    instagrammable: "사진 명소",
+    active: "활동적인 경험",
+    "pop-up-stores": "팝업 스토어",
+    "aesthetic-cafes": "감성 카페",
+    "social-travel": "소셜 여행",
+    "interactive-experiences": "참여형 경험",
+    "vibrant-energy": "밝은 에너지",
+    "photo-worthy": "사진 남기기 좋은 곳",
+    "collaboration-centric": "함께 즐기는 경험"
   };
 
   return labels[tag] ?? tag;

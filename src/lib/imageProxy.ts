@@ -1,4 +1,4 @@
-const ALLOWED_IMAGE_HOST_SUFFIXES = [".cdninstagram.com", ".fbcdn.net"];
+const ALLOWED_IMAGE_HOST_SUFFIXES = [".cdninstagram.com", ".fbcdn.net", ".kpopping.com"];
 
 export function isAllowedProxyImageUrl(value: string): boolean {
   try {

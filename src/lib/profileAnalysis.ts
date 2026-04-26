@@ -152,7 +152,19 @@ function labelTasteTag(tag: string): string {
     "trendy-cafes": "트렌디한 카페",
     "specialty-coffee": "스페셜티 커피",
     "minimalist-aesthetic": "미니멀한 미감",
-    "local-neighborhood": "로컬 동네"
+    "local-neighborhood": "로컬 동네",
+    "eco-friendly": "친환경 감도",
+    "sustainable-travel": "지속가능 여행",
+    "trendy-spots": "트렌디한 장소",
+    instagrammable: "사진 명소",
+    active: "활동적인 경험",
+    "pop-up-stores": "팝업 스토어",
+    "aesthetic-cafes": "감성 카페",
+    "social-travel": "소셜 여행",
+    "interactive-experiences": "참여형 경험",
+    "vibrant-energy": "밝은 에너지",
+    "photo-worthy": "사진 남기기 좋은 곳",
+    "collaboration-centric": "함께 즐기는 경험"
   };
 
   return labels[tag] ?? tag;

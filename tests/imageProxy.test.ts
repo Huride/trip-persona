@@ -6,6 +6,10 @@ describe("isAllowedProxyImageUrl", () => {
     expect(isAllowedProxyImageUrl("https://scontent-icn2-1.cdninstagram.com/v/t51.82787-15/foo.jpg")).toBe(true);
   });
 
+  it("allows known public mirror image URLs for demo fallback evidence", () => {
+    expect(isAllowedProxyImageUrl("https://legacy.kpopping.com/e0/4/chuucandoit-photo.jpeg")).toBe(true);
+  });
+
   it("rejects non-image proxy targets outside the allowlist", () => {
     expect(isAllowedProxyImageUrl("http://scontent-icn2-1.cdninstagram.com/foo.jpg")).toBe(false);
     expect(isAllowedProxyImageUrl("https://example.com/foo.jpg")).toBe(false);
