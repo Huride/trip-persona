@@ -9,6 +9,7 @@ Implemented:
 - Deterministic destination scoring with Vitest coverage.
 - Sample Instagram profile fallback analysis for cafe/gallery, ocean/nature, and food/city profiles.
 - Gemini prompt builders and server-side Gemini helper with fallback behavior.
+- Gemini model updated to `gemini-3-flash-preview`; helper now tries `GEMINI_API_KEY` and `GEMINI_API_KEY_1` through `GEMINI_API_KEY_4` without exposing keys to the browser.
 - Best-effort Instagram ingestion using Playwright with sample fallback.
 - `/api/analyze` endpoint that combines ingestion, persona analysis, ranking, concepts, and itinerary.
 - Main UI workflow for profile URL input, travel survey, loading state, error state, and results.
