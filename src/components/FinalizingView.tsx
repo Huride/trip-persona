@@ -10,7 +10,7 @@ export function FinalizingView({ profileStatus }: FinalizingViewProps) {
   ];
 
   return (
-    <main className="flex min-h-screen items-center bg-mist px-5 py-8 text-ink">
+    <main className="flex min-h-screen items-start overflow-x-hidden bg-mist px-4 py-16 text-ink">
       <section className="mx-auto grid w-full max-w-md gap-5 text-center">
         <div className="mx-auto h-16 w-16 rounded-full border-8 border-cyan-100 border-t-cyan-800 animate-spin" />
         <div className="grid gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { BudgetBand, TravelPace, TravelRange, TravelRegionPreference, TripLength, TripSurvey, WalkingLimit } from "@/src/lib/types";
 
 type SurveyAnswers = Omit<TripSurvey, "instagramUrl" | "destinationPreference">;
@@ -139,6 +139,10 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
   const question = questions[step];
   const statusCopy = analysisStatusCopy[profileStatus];
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [step]);
+
   const selectedValues = useMemo(() => {
     const value = answers[question.key];
     return Array.isArray(value) ? value : [String(value)];
@@ -196,9 +200,9 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
   }
 
   return (
-    <main className="min-h-screen bg-mist px-5 py-5 text-ink">
+    <main className="min-h-screen overflow-x-hidden bg-mist px-4 py-4 text-ink">
       <section className="mx-auto grid w-full max-w-md gap-4">
-        <div className="sticky top-4 z-10 grid gap-2 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-900 shadow-sm">
+        <div className="sticky top-0 z-10 -mx-4 grid gap-2 border-b border-cyan-200 bg-cyan-50 px-4 py-3 text-cyan-900 shadow-sm">
           <div className="flex items-center justify-between text-[13px] font-extrabold">
             <span>{statusCopy.title}</span>
             <span>{profileStatus === "ready" || profileStatus === "fallback" ? "완료" : "진행 중"}</span>
@@ -214,7 +218,7 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
           <span>약 30초</span>
         </div>
 
-        <article className="grid gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+        <article className="grid gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm">
           <div className="grid gap-2">
             <h1 className="text-[24px] font-extrabold leading-[30px]">{question.title}</h1>
             {question.helper ? <p className="text-[13px] leading-5 text-muted">{question.helper}</p> : null}
@@ -229,7 +233,7 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
           ) : null}
 
           {question.type !== "text" ? (
-            <div className={question.layout === "chips" ? "flex flex-wrap gap-2" : "grid gap-2"}>
+            <div className={question.layout === "chips" ? "grid grid-cols-3 gap-2" : "grid gap-2"}>
               {question.choices?.map((choice) => {
                 const isSelected = selectedValues.includes(choice.value);
                 return (
@@ -238,10 +242,10 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
                     type="button"
                     onClick={() => (question.type === "multi" ? toggleAnswer(choice.value) : setAnswer(choice.value))}
                     className={question.layout === "chips"
-                      ? `h-10 rounded-full border px-4 text-[13px] font-extrabold transition ${
-                          isSelected ? "border-cyan-800 bg-cyan-50 text-cyan-900" : "border-line bg-white text-ink"
+                      ? `min-h-12 rounded-xl border px-2 text-center text-[14px] font-extrabold shadow-sm transition active:scale-[0.98] ${
+                          isSelected ? "border-cyan-800 bg-cyan-800 text-white" : "border-line bg-white text-ink"
                         }`
-                      : `grid gap-1 rounded-xl border p-4 text-left transition ${
+                      : `grid min-h-16 gap-1 rounded-xl border p-4 text-left shadow-sm transition active:scale-[0.99] ${
                           isSelected ? "border-cyan-800 bg-cyan-50 text-cyan-900" : "border-line bg-white text-ink"
                         }`}
                   >

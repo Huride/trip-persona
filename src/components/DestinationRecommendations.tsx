@@ -26,7 +26,7 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
   const selectedDay = days.find((day) => day.day === activeDay) ?? days[0];
 
   return (
-    <main className="min-h-screen bg-mist px-5 py-5 text-ink">
+    <main className="min-h-screen overflow-x-hidden bg-mist px-4 py-4 text-ink">
       <section className="mx-auto grid w-full max-w-md gap-4">
         <button onClick={onBack} className="inline-flex w-max items-center gap-2 text-[13px] font-bold text-cyan-900">
           <ArrowLeft aria-hidden="true" size={16} />
@@ -35,7 +35,7 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
 
         <DestinationHero plan={active} />
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
           {plans.map((plan, index) => (
             <button
               key={plan.destination.destinationId}
@@ -43,7 +43,7 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
                 setActiveIndex(index);
                 setActiveDay(1);
               }}
-              className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-extrabold ${
+              className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-[13px] font-extrabold active:scale-[0.98] ${
                 activeIndex === index ? "bg-cyan-800 text-white" : "bg-white text-muted"
               }`}
             >
@@ -54,7 +54,7 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
 
         <WeatherCard plan={active} />
 
-        <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2">
+        <div className="flex max-w-full snap-x gap-3 overflow-x-auto pb-2">
           <RecommendationCard icon={<Plane size={17} />} title="항공/교통" item={active.transport[0]} />
           <RecommendationCard icon={<Hotel size={17} />} title="숙소" item={active.stays[0]} />
           <RecommendationCard icon={<Ticket size={17} />} title="레저" item={active.activities[0]} />
@@ -65,12 +65,12 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
 
         <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
           <h2 className="text-[20px] font-extrabold">{active.destination.destinationName} 일정</h2>
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1">
             {days.map((day) => (
               <button
                 key={`${active.destination.destinationId}-chip-${day.day}`}
                 onClick={() => setActiveDay(day.day)}
-                className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-extrabold ${
+                className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-[13px] font-extrabold active:scale-[0.98] ${
                   selectedDay.day === day.day ? "bg-cyan-800 text-white" : "bg-neutral-100 text-muted"
                 }`}
               >
@@ -173,7 +173,7 @@ function WeatherCard({ plan }: { plan: DestinationPlan }) {
 
 function RecommendationCard({ icon, title, item, compact = false }: { icon: ReactNode; title: string; item?: RecommendationItem; compact?: boolean }) {
   return (
-    <article className="grid min-h-52 w-[82%] min-w-[300px] shrink-0 snap-start gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
+    <article className="grid min-h-52 w-[82vw] max-w-[340px] min-w-[272px] shrink-0 snap-start gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
       <div className="flex items-center gap-2 text-[13px] font-extrabold text-cyan-900">
         {icon}
         {title}

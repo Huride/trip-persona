@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DestinationRecommendations } from "@/src/components/DestinationRecommendations";
 import { FinalizingView } from "@/src/components/FinalizingView";
 import { PersonaReveal } from "@/src/components/PersonaReveal";
@@ -18,6 +18,10 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [profileStatus, setProfileStatus] = useState<ProfileAnalysisStatus>("idle");
   const profileAnalysisPromise = useRef<Promise<ProfileAnalysisResult | null> | null>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [stage]);
 
   function handleStart(nextInstagramUrl: string) {
     setInstagramUrl(nextInstagramUrl);

@@ -19,7 +19,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
   const visibleImages = getImagesForTag(result.profileImages ?? [], selectedTag);
 
   return (
-    <main className="min-h-screen bg-mist px-5 py-6 text-ink">
+    <main className="min-h-screen overflow-x-hidden bg-mist px-4 py-5 text-ink">
       <section className="mx-auto grid w-full max-w-md gap-5">
         <p className="w-max rounded-full bg-cyan-100 px-3 py-2 text-[12px] font-extrabold text-cyan-900">
           {result.source === "live" ? "Instagram live taste report" : "Instagram taste report"}
@@ -35,7 +35,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
           </div>
 
           {evidenceTags.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
               {evidenceTags.map((item) => {
                 const isActive = selectedTag === item.tag;
                 return (
@@ -43,7 +43,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
                     key={item.tag}
                     type="button"
                     onClick={() => setActiveTag(item.tag)}
-                    className={`h-10 shrink-0 rounded-full border px-4 text-[13px] font-extrabold transition ${
+                    className={`min-h-11 shrink-0 rounded-full border px-4 text-[13px] font-extrabold transition active:scale-[0.98] ${
                       isActive ? "border-cyan-800 bg-white text-cyan-900 shadow-sm" : "border-cyan-200 bg-cyan-50 text-cyan-800"
                     }`}
                   >
@@ -55,9 +55,9 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
           ) : null}
 
           {visibleImages.length > 0 ? (
-            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+            <div className="flex max-w-full snap-x gap-3 overflow-x-auto pb-1">
               {visibleImages.map((image) => (
-                <figure key={`${selectedTag}-${image.url}`} className="w-40 shrink-0 snap-start overflow-hidden rounded-xl bg-white shadow-sm">
+                <figure key={`${selectedTag}-${image.url}`} className="w-40 max-w-[72vw] shrink-0 snap-start overflow-hidden rounded-xl bg-white shadow-sm">
                   <img src={toProxiedImageUrl(image.url)} alt={image.alt} className="aspect-square w-full object-cover" loading="eager" />
                   {image.visualDescription ? (
                     <figcaption className="min-h-16 px-3 py-2 text-[11px] font-bold leading-4 text-cyan-950">{image.visualDescription}</figcaption>
@@ -92,11 +92,11 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
         </article>
 
         <div className="grid gap-2">
-          <button onClick={onContinue} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
+          <button onClick={onContinue} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
             추천 여행지 확인하기
             <ArrowRight aria-hidden="true" size={18} />
           </button>
-          <button onClick={onRestart} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-cyan-200 bg-white px-4 text-[15px] font-extrabold text-cyan-900">
+          <button onClick={onRestart} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-cyan-200 bg-white px-4 text-[15px] font-extrabold text-cyan-900">
             <RotateCcw aria-hidden="true" size={17} />
             다시 분석하기
           </button>
