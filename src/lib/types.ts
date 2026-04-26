@@ -4,25 +4,58 @@ export type DestinationId =
   | "busan"
   | "mokpo"
   | "namhae"
+  | "fukuoka"
+  | "sapporo"
+  | "kyoto"
   | "tokyo"
   | "osaka"
   | "kamakura"
   | "matsuyama"
   | "miyakojima"
-  | "kaohsiung";
+  | "taipei"
+  | "tainan"
+  | "kaohsiung"
+  | "bangkok"
+  | "chiangmai"
+  | "danang"
+  | "hoian"
+  | "hanoi"
+  | "hochiminh"
+  | "bali"
+  | "cebu"
+  | "kualalumpur"
+  | "singapore"
+  | "hongkong"
+  | "macau";
 
 export type TripLength = "day-trip" | "1n2d" | "2n3d" | "3n4d" | "4plus";
 export type TravelPace = "slow" | "balanced" | "packed";
+export type TravelRegionPreference = "domestic" | "overseas" | "anywhere";
+export type TravelRange = "nearby" | "short-flight" | "long-flight" | "anywhere";
 export type WalkingLimit = "under-5k" | "under-10k" | "no-limit";
 export type BudgetBand = "under-100k" | "100k-300k" | "300k-700k" | "700k-1200k" | "over-1200k";
 export type CostLevel = "free" | "low" | "medium" | "high";
 export type WalkingLoad = "low" | "medium" | "high";
+export type DestinationCountry =
+  | "Korea"
+  | "Japan"
+  | "Taiwan"
+  | "Thailand"
+  | "Vietnam"
+  | "Indonesia"
+  | "Philippines"
+  | "Malaysia"
+  | "Singapore"
+  | "Hong Kong"
+  | "Macau";
 
 export interface TripSurvey {
   instagramUrl: string;
   travelWindow: string;
   tripLength: TripLength;
   destinationPreference: DestinationId | "recommend";
+  regionPreference: TravelRegionPreference;
+  travelRange: TravelRange;
   budget: BudgetBand;
   companions: "solo" | "partner" | "friends" | "family" | "parents";
   pace: TravelPace;
@@ -48,7 +81,7 @@ export interface Place {
 
 export interface Destination {
   id: DestinationId;
-  country: "Korea" | "Japan" | "Taiwan";
+  country: DestinationCountry;
   name: string;
   personalityTags: string[];
   summary: string;
@@ -88,6 +121,12 @@ export interface ItineraryItem {
   planB: string;
 }
 
+export interface DailyItinerary {
+  day: number;
+  title: string;
+  items: ItineraryItem[];
+}
+
 export interface TripPersonaResult {
   persona: TravelPersona;
   destinations: DestinationRecommendation[];
@@ -96,6 +135,7 @@ export interface TripPersonaResult {
   whyThisFits: string[];
   excludedPlaces: string[];
   destinationPlans: DestinationPlan[];
+  source?: "live" | "sample" | "pasted";
 }
 
 export interface RecommendationItem {
@@ -118,4 +158,5 @@ export interface DestinationPlan {
   restaurants: RecommendationItem[];
   photoSpots: RecommendationItem[];
   itinerary: ItineraryItem[];
+  dailyItinerary: DailyItinerary[];
 }

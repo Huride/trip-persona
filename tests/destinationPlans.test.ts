@@ -7,6 +7,8 @@ const survey: TripSurvey = {
   travelWindow: "5월",
   tripLength: "3n4d",
   destinationPreference: "recommend",
+  regionPreference: "anywhere",
+  travelRange: "short-flight",
   budget: "300k-700k",
   companions: "partner",
   pace: "slow",
@@ -43,6 +45,8 @@ describe("buildDestinationPlans", () => {
     expect(plans[0].stays.length).toBeGreaterThan(0);
     expect(plans[0].restaurants.length).toBeGreaterThan(0);
     expect(plans[0].itinerary.length).toBeGreaterThan(0);
+    expect(plans[0].dailyItinerary).toHaveLength(4);
+    expect(plans[0].dailyItinerary[0].items.length).toBeGreaterThanOrEqual(3);
   });
 
   it("keeps fallback itinerary shape compatible with the result UI", () => {

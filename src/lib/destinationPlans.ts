@@ -1,5 +1,5 @@
-import { places } from "./destinations";
-import type { DestinationId, DestinationPlan, DestinationRecommendation, ItineraryItem, RecommendationItem, TripSurvey } from "./types";
+import { destinations, places } from "./destinations";
+import type { DailyItinerary, DestinationId, DestinationPlan, DestinationRecommendation, ItineraryItem, Place, RecommendationItem, TripSurvey } from "./types";
 
 interface DestinationPlanSeed {
   photo: DestinationPlan["photo"];
@@ -9,7 +9,7 @@ interface DestinationPlanSeed {
   photoSpots: RecommendationItem[];
 }
 
-const planSeeds: Record<DestinationId, DestinationPlanSeed> = {
+const planSeeds: Partial<Record<DestinationId, DestinationPlanSeed>> = {
   seoul: {
     photo: { url: "https://images.unsplash.com/photo-1538485399081-7c8ed9b1f5e1?auto=format&fit=crop&w=1200&q=80", alt: "서울 도심과 한강 야경", credit: "Unsplash" },
     transport: item("지하철 중심 이동", "T-money 또는 교통카드", "짧은 동선과 높은 접근성이 서울 여행 강점입니다."),
@@ -91,8 +91,10 @@ const planSeeds: Record<DestinationId, DestinationPlanSeed> = {
 
 export function buildDestinationPlans(recommendations: DestinationRecommendation[], survey: TripSurvey): DestinationPlan[] {
   return recommendations.map((destination) => {
-    const seed = planSeeds[destination.destinationId];
+    const destinationMeta = destinations.find((item) => item.id === destination.destinationId);
+    const seed = planSeeds[destination.destinationId] ?? makeDefaultSeed(destination.destinationName, destinationMeta?.summary);
     const destinationPlaces = places.filter((place) => place.destinationId === destination.destinationId);
+    const dailyItinerary = buildDailyItinerary(destination.destinationId, destinationPlaces, survey, seed);
 
     return {
       destination,
@@ -101,26 +103,60 @@ export function buildDestinationPlans(recommendations: DestinationRecommendation
       stays: seed.stays,
       restaurants: seed.restaurants,
       photoSpots: seed.photoSpots,
-      itinerary: buildItinerary(destination.destinationId, destinationPlaces, survey)
+      itinerary: dailyItinerary.flatMap((day) => day.items),
+      dailyItinerary
     };
   });
 }
 
-function buildItinerary(destinationId: DestinationId, destinationPlaces: typeof places, survey: TripSurvey): ItineraryItem[] {
+function buildDailyItinerary(destinationId: DestinationId, destinationPlaces: Place[], survey: TripSurvey, seed: DestinationPlanSeed): DailyItinerary[] {
   const basePlaces = destinationPlaces.length > 0 ? destinationPlaces : places.filter((place) => place.destinationId === destinationId);
   const dayCount = tripLengthToDays(survey.tripLength);
-  const slots = ["10:00", "13:00", "17:00", "20:00"];
-  const maxItems = Math.min(Math.max(dayCount, 1) * 2, Math.max(basePlaces.length, 1), 4);
+  const titles = ["도착과 첫 취향 체크", "핵심 동네 깊게 보기", "로컬 미식과 사진 루트", "여유 회복과 쇼핑", "마지막 산책과 재방문 후보"];
 
-  return basePlaces.slice(0, maxItems).map((place, index) => ({
-    time: slots[index] ?? "18:00",
-    placeName: place.name,
-    activity: place.description,
-    fitRationale: `${place.vibeTags.join(", ")} 취향 신호와 연결됩니다.`,
-    cost: place.estimatedCost,
-    walkingLoad: place.walkingLoad,
-    planB: "날씨나 혼잡도가 맞지 않으면 같은 지역의 카페 또는 실내 장소로 대체하세요."
+  return Array.from({ length: dayCount }, (_, index) => ({
+    day: index + 1,
+    title: titles[index] ?? `${index + 1}일차 취향 확장 루트`,
+    items: buildDayItems(basePlaces, seed, index, survey)
   }));
+}
+
+function buildDayItems(basePlaces: Place[], seed: DestinationPlanSeed, dayIndex: number, survey: TripSurvey): ItineraryItem[] {
+  const selectedPlace = basePlaces[dayIndex % Math.max(basePlaces.length, 1)];
+  const walkingLoad = survey.walkingLimit === "under-5k" ? "low" : selectedPlace?.walkingLoad ?? "medium";
+  const corePlaceName = selectedPlace?.name ?? seed.photoSpots[0]?.name ?? "대표 취향 스팟";
+  const coreActivity = selectedPlace?.description ?? seed.photoSpots[0]?.summary ?? "프로필 취향과 맞는 대표 장소를 중심으로 일정을 시작합니다.";
+  const coreTags = selectedPlace?.vibeTags.join(", ") ?? "profile taste";
+
+  return [
+    {
+      time: dayIndex === 0 ? "11:00" : "10:00",
+      placeName: dayIndex === 0 ? seed.transport[0]?.name ?? "이동 시작" : corePlaceName,
+      activity: dayIndex === 0 ? seed.transport[0]?.summary ?? "숙소와 첫 장소까지 부담 없는 이동으로 시작합니다." : coreActivity,
+      fitRationale: dayIndex === 0 ? seed.transport[0]?.why ?? "이동 피로를 줄이고 첫날 만족도를 높입니다." : `${coreTags} 취향 신호와 연결됩니다.`,
+      cost: dayIndex === 0 ? "medium" : selectedPlace?.estimatedCost ?? "low",
+      walkingLoad,
+      planB: "이동이 지연되면 숙소 체크인 후 가까운 카페나 실내 장소로 시작하세요."
+    },
+    {
+      time: "14:00",
+      placeName: dayIndex % 2 === 0 ? corePlaceName : seed.photoSpots[0]?.name ?? corePlaceName,
+      activity: dayIndex % 2 === 0 ? coreActivity : seed.photoSpots[0]?.summary ?? coreActivity,
+      fitRationale: dayIndex % 2 === 0 ? `${coreTags} 취향 신호와 연결됩니다.` : seed.photoSpots[0]?.why ?? "사진과 분위기 취향을 함께 만족시킵니다.",
+      cost: selectedPlace?.estimatedCost ?? "low",
+      walkingLoad,
+      planB: "혼잡하면 같은 권역의 예약 가능한 전시, 쇼핑몰, 로컬 카페로 대체하세요."
+    },
+    {
+      time: "18:30",
+      placeName: seed.restaurants[0]?.name ?? "로컬 식사",
+      activity: seed.restaurants[0]?.summary ?? "그 지역에서 부담 없이 즐길 수 있는 로컬 식사를 넣습니다.",
+      fitRationale: seed.restaurants[0]?.why ?? "맛집과 로컬 경험을 일정의 만족 포인트로 잡습니다.",
+      cost: "medium",
+      walkingLoad: "low",
+      planB: "웨이팅이 길면 숙소 근처 캐주얼 다이닝이나 포장 가능한 로컬 메뉴로 바꾸세요."
+    }
+  ];
 }
 
 function tripLengthToDays(tripLength: TripSurvey["tripLength"]): number {
@@ -133,4 +169,18 @@ function tripLengthToDays(tripLength: TripSurvey["tripLength"]): number {
 
 function item(name: string, summary: string, why: string): RecommendationItem[] {
   return [{ name, summary, why }];
+}
+
+function makeDefaultSeed(destinationName: string, summary = "취향 신호와 여행 조건을 함께 반영한 추천 여행지"): DestinationPlanSeed {
+  return {
+    photo: {
+      url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+      alt: `${destinationName} 여행 이미지`,
+      credit: "Unsplash"
+    },
+    transport: item(`${destinationName} 중심 교통`, "공항/역에서 숙소와 핵심 권역을 먼저 연결", "초반 이동 피로를 줄이고 일정 밀도를 안정적으로 맞춥니다."),
+    stays: item(`${destinationName} 중심권 숙소`, summary, "추천 장소 사이 이동 시간을 줄이고 밤 일정 이후 복귀가 쉽습니다."),
+    restaurants: item(`${destinationName} 로컬 맛집`, "현지 대표 메뉴와 캐주얼 다이닝", "취향 분석 결과의 food/local 신호를 일정에 반영합니다."),
+    photoSpots: item(`${destinationName} 대표 포토 루트`, "도시나 자연의 분위기가 잘 드러나는 산책 지점", "프로필에 남기기 좋은 장면과 여행 컨셉을 함께 만듭니다.")
+  };
 }

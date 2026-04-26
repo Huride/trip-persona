@@ -5,6 +5,7 @@ import { places } from "@/src/lib/destinations";
 import { generateJson } from "@/src/lib/gemini";
 import { ingestInstagramProfile } from "@/src/lib/instagram";
 import { analyzeSampleProfile } from "@/src/lib/mockAnalysis";
+import { analyzeProfileText } from "@/src/lib/profileAnalysis";
 import { buildConceptPrompt, buildItineraryPrompt, buildPersonaPrompt } from "@/src/lib/prompts";
 import { parseItineraryPayload, parseTravelConcepts, parseTravelPersona } from "@/src/lib/resultValidation";
 import { rankDestinations } from "@/src/lib/scoring";
@@ -15,9 +16,40 @@ const surveySchema = z.object({
   travelWindow: z.string().min(1),
   tripLength: z.enum(["day-trip", "1n2d", "2n3d", "3n4d", "4plus"]),
   destinationPreference: z.union([
-    z.enum(["seoul", "jeju", "busan", "mokpo", "namhae", "tokyo", "osaka", "kamakura", "matsuyama", "miyakojima", "kaohsiung"]),
+    z.enum([
+      "seoul",
+      "jeju",
+      "busan",
+      "mokpo",
+      "namhae",
+      "fukuoka",
+      "sapporo",
+      "kyoto",
+      "tokyo",
+      "osaka",
+      "kamakura",
+      "matsuyama",
+      "miyakojima",
+      "taipei",
+      "tainan",
+      "kaohsiung",
+      "bangkok",
+      "chiangmai",
+      "danang",
+      "hoian",
+      "hanoi",
+      "hochiminh",
+      "bali",
+      "cebu",
+      "kualalumpur",
+      "singapore",
+      "hongkong",
+      "macau"
+    ]),
     z.literal("recommend")
   ]),
+  regionPreference: z.enum(["domestic", "overseas", "anywhere"]),
+  travelRange: z.enum(["nearby", "short-flight", "long-flight", "anywhere"]),
   budget: z.enum(["under-100k", "100k-300k", "300k-700k", "700k-1200k", "over-1200k"]),
   companions: z.enum(["solo", "partner", "friends", "family", "parents"]),
   pace: z.enum(["slow", "balanced", "packed"]),
@@ -33,7 +65,7 @@ export async function POST(request: Request) {
 
   const fallbackPersona = survey.instagramUrl.startsWith("sample:")
     ? analyzeSampleProfile(survey.instagramUrl.replace("sample:", ""))
-    : analyzeSampleProfile("cafe-gallery");
+    : analyzeProfileText(ingested.profileText, ingested.username);
 
   const persona = parseTravelPersona(
     await generateJson<unknown>(buildPersonaPrompt(ingested.profileText), fallbackPersona),

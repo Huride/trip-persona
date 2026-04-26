@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import { selectFallbackSampleId } from "./profileAnalysis";
 import { sampleProfiles } from "./sampleProfiles";
 
 export interface InstagramProfileContent {
@@ -30,13 +31,17 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
     await page.waitForTimeout(2500);
     const text = await page.locator("body").innerText({ timeout: 3000 });
     await browser.close();
+    if (!isUsableProfileText(text)) {
+      throw new Error("Instagram profile text was not usable");
+    }
     return {
       source: "live",
       username: extractUsername(instagramUrl),
       profileText: text.slice(0, 8000)
     };
   } catch {
-    const sample = sampleProfiles[0];
+    const sampleId = selectFallbackSampleId(instagramUrl);
+    const sample = sampleProfiles.find((item) => item.id === sampleId) ?? sampleProfiles[0];
     return {
       source: "sample",
       username: sample.id,
@@ -57,4 +62,12 @@ function extractUsername(url: string): string {
   } catch {
     return "instagram";
   }
+}
+
+function isUsableProfileText(text: string): boolean {
+  const normalized = text.toLowerCase();
+  if (text.trim().length < 80) return false;
+  if (normalized.includes("log in") && normalized.includes("sign up")) return false;
+  if (normalized.includes("로그인") && normalized.includes("가입")) return false;
+  return true;
 }

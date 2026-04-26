@@ -18,6 +18,8 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
       travelWindow: String(form.get("travelWindow") || "이번 봄"),
       tripLength: form.get("tripLength") as TripSurvey["tripLength"],
       destinationPreference: form.get("destinationPreference") as TripSurvey["destinationPreference"],
+      regionPreference: form.get("regionPreference") as TripSurvey["regionPreference"],
+      travelRange: form.get("travelRange") as TripSurvey["travelRange"],
       budget: form.get("budget") as TripSurvey["budget"],
       companions: form.get("companions") as TripSurvey["companions"],
       pace: form.get("pace") as TripSurvey["pace"],
@@ -60,6 +62,8 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
             <option value="day-trip">당일치기</option>
             <option value="1n2d">1박 2일</option>
             <option value="2n3d">2박 3일</option>
+            <option value="3n4d">3박 4일</option>
+            <option value="4plus">4박 이상</option>
           </select>
         </label>
         <label className="grid gap-2 text-[14px] font-bold">
@@ -71,22 +75,54 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
             <option value="busan">부산</option>
             <option value="mokpo">목포</option>
             <option value="namhae">남해</option>
+            <option value="fukuoka">후쿠오카</option>
+            <option value="sapporo">삿포로</option>
+            <option value="kyoto">교토</option>
             <option value="tokyo">도쿄</option>
             <option value="osaka">오사카</option>
             <option value="kamakura">가마쿠라</option>
             <option value="matsuyama">마쓰야마</option>
             <option value="miyakojima">미야코지마</option>
+            <option value="taipei">타이베이</option>
+            <option value="tainan">타이난</option>
             <option value="kaohsiung">가오슝</option>
+            <option value="bangkok">방콕</option>
+            <option value="chiangmai">치앙마이</option>
+            <option value="danang">다낭</option>
+            <option value="hoian">호이안</option>
+            <option value="hanoi">하노이</option>
+            <option value="hochiminh">호치민</option>
+            <option value="bali">발리</option>
+            <option value="cebu">세부</option>
+            <option value="kualalumpur">쿠알라룸푸르</option>
+            <option value="singapore">싱가포르</option>
+            <option value="hongkong">홍콩</option>
+            <option value="macau">마카오</option>
           </select>
         </label>
       </div>
-      <div className="grid gap-4 md:grid-cols-4">
-        <select name="budget" aria-label="예산" className={selectClass} defaultValue="medium">
-          <option value="low">낮은 예산</option>
-          <option value="medium">중간 예산</option>
-          <option value="high">높은 예산</option>
+      <div className="grid gap-4 md:grid-cols-3">
+        <select name="regionPreference" aria-label="국내/해외 선호" className={selectClass} defaultValue="anywhere">
+          <option value="domestic">국내 여행만</option>
+          <option value="overseas">해외 여행 선호</option>
+          <option value="anywhere">국내/해외 모두</option>
         </select>
-        <select name="companions" aria-label="동행" className={selectClass} defaultValue="solo">
+        <select name="travelRange" aria-label="이동 허용 범위" className={selectClass} defaultValue="short-flight">
+          <option value="nearby">기차/차 3시간 이내</option>
+          <option value="short-flight">2-4시간 비행까지</option>
+          <option value="long-flight">5시간 이상 비행 가능</option>
+          <option value="anywhere">이동 시간 상관없음</option>
+        </select>
+        <select name="budget" aria-label="예산" className={selectClass} defaultValue="300k-700k">
+          <option value="under-100k">10만원 이하</option>
+          <option value="100k-300k">10만-30만원</option>
+          <option value="300k-700k">30만-70만원</option>
+          <option value="700k-1200k">70만-120만원</option>
+          <option value="over-1200k">120만원 이상</option>
+        </select>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <select name="companions" aria-label="동행" className={selectClass} defaultValue="partner">
           <option value="solo">혼자</option>
           <option value="partner">연인</option>
           <option value="friends">친구</option>

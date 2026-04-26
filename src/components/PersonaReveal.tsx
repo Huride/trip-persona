@@ -10,32 +10,36 @@ interface PersonaRevealProps {
 }
 
 export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealProps) {
+  const insightCards = buildInsightCards(result);
+
   return (
     <main className="min-h-screen bg-mist px-5 py-6 text-ink">
       <section className="mx-auto grid w-full max-w-md gap-5">
-        <p className="w-max rounded-full bg-cyan-100 px-3 py-2 text-[12px] font-extrabold text-cyan-900">Instagram taste report</p>
+        <p className="w-max rounded-full bg-cyan-100 px-3 py-2 text-[12px] font-extrabold text-cyan-900">
+          {result.source === "live" ? "Instagram live taste report" : "Instagram taste report"}
+        </p>
         <div className="grid gap-3">
           <h1 className="text-[30px] font-extrabold leading-[36px]">{result.persona.title}</h1>
           <p className="text-[15px] leading-[22px] text-muted">{result.persona.summary}</p>
         </div>
 
-        <div className="relative h-40 overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
-          <span className="absolute left-5 top-5 rounded-full bg-white px-3 py-2 text-[12px] font-extrabold text-cyan-900 shadow-sm">{result.persona.tasteTags[0] ?? "travel"}</span>
-          <span className="absolute right-5 top-16 rounded-full bg-white px-3 py-2 text-[12px] font-extrabold text-cyan-900 shadow-sm">{result.persona.tasteTags[1] ?? "local"}</span>
-          <span className="absolute bottom-5 left-20 rounded-full bg-white px-3 py-2 text-[12px] font-extrabold text-cyan-900 shadow-sm">{result.persona.tasteTags[2] ?? "photo"}</span>
+        <div className="grid gap-3">
+          {insightCards.map((card) => (
+            <article key={card.label} className="grid gap-2 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+              <p className="text-[12px] font-extrabold text-cyan-800">{card.label}</p>
+              <h2 className="text-[18px] font-extrabold leading-6">{card.title}</h2>
+              <p className="text-[13px] leading-5 text-muted">{card.description}</p>
+            </article>
+          ))}
         </div>
 
-        <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
-          <h2 className="text-[18px] font-extrabold">프로필에서 찾은 취향 신호</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
+        <article className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+          <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
+          <div className="flex flex-wrap gap-2">
             {result.persona.tasteTags.map((tag) => (
               <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{tag}</span>
             ))}
           </div>
-        </article>
-
-        <article className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-          <h2 className="text-[18px] font-extrabold">여행 성향</h2>
           <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
           <PersonaMetric label="혼잡 회피 성향" value={result.persona.crowdTolerance === "low" ? 78 : result.persona.crowdTolerance === "medium" ? 52 : 28} />
         </article>
@@ -53,6 +57,27 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
       </section>
     </main>
   );
+}
+
+function buildInsightCards(result: TripPersonaResult) {
+  const tags = result.persona.tasteTags;
+  const mood = tags.includes("ocean") || tags.includes("coastal") || tags.includes("beach")
+    ? "바다와 여유가 있는 장면"
+    : tags.includes("food") || tags.includes("local-food")
+      ? "로컬 미식과 활기 있는 거리"
+      : tags.includes("gallery") || tags.includes("design") || tags.includes("art")
+        ? "전시, 디자인, 감도 높은 동네"
+        : "카페와 산책이 섞인 도시 취향";
+  const paceLabel = result.persona.pace === "slow" ? "하루 2-3곳을 깊게 보는 일정" : result.persona.pace === "packed" ? "하루 5곳 이상 촘촘한 일정" : "대표 코스와 여유를 섞는 일정";
+  const crowdLabel = result.persona.crowdTolerance === "low" ? "혼잡을 피하는 쪽" : result.persona.crowdTolerance === "high" ? "활기 있는 장소도 괜찮은 쪽" : "혼잡도는 중간 수준까지 허용";
+  const evidence = result.persona.confidenceNotes[0] ?? "프로필 텍스트와 설문 답변을 함께 반영했습니다.";
+
+  return [
+    { label: "좋아하는 분위기", title: mood, description: "프로필에서 반복되는 장소와 활동 신호를 여행 컨셉으로 번역했습니다." },
+    { label: "여행 속도", title: paceLabel, description: "설문 답변과 프로필의 활동 밀도를 함께 보고 하루 일정 수를 조절합니다." },
+    { label: "혼잡 민감도", title: crowdLabel, description: "추천지의 시간대와 Plan B를 고를 때 이 기준을 반영합니다." },
+    { label: "추천 근거", title: evidence, description: "아래 추천 여행지는 이 분석 결과와 이동 가능 범위를 함께 적용해 정렬됩니다." }
+  ];
 }
 
 function PersonaMetric({ label, value }: { label: string; value: number }) {

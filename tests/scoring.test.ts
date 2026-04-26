@@ -16,6 +16,8 @@ const survey: TripSurvey = {
   travelWindow: "spring",
   tripLength: "1n2d",
   destinationPreference: "recommend",
+  regionPreference: "anywhere",
+  travelRange: "short-flight",
   budget: "300k-700k",
   companions: "partner",
   pace: "slow",
@@ -34,5 +36,15 @@ describe("rankDestinations", () => {
   it("respects explicit destination preference", () => {
     const result = rankDestinations(persona, { ...survey, destinationPreference: "jeju" });
     expect(result[0].destinationId).toBe("jeju");
+  });
+
+  it("keeps domestic destinations competitive when the user only wants Korea", () => {
+    const result = rankDestinations(persona, { ...survey, regionPreference: "domestic", travelRange: "nearby" });
+    expect(["seoul", "jeju", "busan", "mokpo", "namhae"]).toContain(result[0].destinationId);
+  });
+
+  it("prioritizes overseas destinations when the user prefers international trips", () => {
+    const result = rankDestinations(persona, { ...survey, regionPreference: "overseas", travelRange: "short-flight" });
+    expect(["seoul", "jeju", "busan", "mokpo", "namhae"]).not.toContain(result[0].destinationId);
   });
 });

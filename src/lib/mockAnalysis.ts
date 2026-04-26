@@ -1,9 +1,14 @@
 import { sampleProfiles } from "./sampleProfiles";
+import { analyzeProfileText } from "./profileAnalysis";
 import type { TravelPersona } from "./types";
 
 export function analyzeSampleProfile(sampleId: string): TravelPersona {
   const profile = sampleProfiles.find((item) => item.id === sampleId) ?? sampleProfiles[0];
   const text = `${profile.bio} ${profile.captions.join(" ")} ${profile.hashtags.join(" ")} ${profile.imageDescriptions.join(" ")}`.toLowerCase();
+
+  if (!sampleProfiles.some((item) => item.id === sampleId)) {
+    return analyzeProfileText(sampleId, sampleId);
+  }
 
   if (text.includes("ocean") || text.includes("바다") || text.includes("island")) {
     return {

@@ -12,7 +12,7 @@ const fallbackPersona: TravelPersona = {
 };
 
 describe("result validation", () => {
-  it("falls back when Gemini returns unsupported persona enum values", () => {
+  it("normalizes Gemini persona enum variants instead of dropping to fallback", () => {
     const parsed = parseTravelPersona(
       {
         title: "High-Density Urban Foodie",
@@ -25,7 +25,14 @@ describe("result validation", () => {
       fallbackPersona
     );
 
-    expect(parsed).toEqual(fallbackPersona);
+    expect(parsed).toEqual({
+      title: "High-Density Urban Foodie",
+      summary: "Likes food trips.",
+      tasteTags: ["food", "urban"],
+      pace: "packed",
+      crowdTolerance: "high",
+      confidenceNotes: ["high confidence"]
+    });
   });
 
   it("falls back when itinerary payload does not match UI item shape", () => {

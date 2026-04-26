@@ -53,15 +53,25 @@ export function DestinationRecommendations({ result, onBack }: DestinationRecomm
         <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
           <h2 className="text-[20px] font-extrabold">{active.destination.destinationName} 일정</h2>
           <div className="mt-4 grid gap-3">
-            {active.itinerary.map((item) => (
-              <div key={`${active.destination.destinationId}-${item.time}-${item.placeName}`} className="grid grid-cols-[52px_1fr] gap-3 rounded-xl border border-line p-3">
-                <span className="text-[13px] font-extrabold text-cyan-800">{item.time}</span>
-                <div className="grid gap-1">
-                  <h3 className="text-[15px] font-extrabold">{item.placeName}</h3>
-                  <p className="text-[13px] leading-5 text-muted">{item.activity}</p>
-                  <p className="rounded-lg bg-cyan-50 p-2 text-[12px] leading-4 text-cyan-900">Plan B: {item.planB}</p>
+            {(active.dailyItinerary.length > 0 ? active.dailyItinerary : [{ day: 1, title: "추천 일정", items: active.itinerary }]).map((day) => (
+              <section key={`${active.destination.destinationId}-day-${day.day}`} className="grid gap-3 rounded-xl border border-line p-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[15px] font-extrabold">Day {day.day}</h3>
+                  <span className="text-[12px] font-bold text-muted">{day.title}</span>
                 </div>
-              </div>
+                <div className="grid gap-2">
+                  {day.items.map((item) => (
+                    <div key={`${active.destination.destinationId}-${day.day}-${item.time}-${item.placeName}`} className="grid grid-cols-[52px_1fr] gap-3 rounded-lg bg-neutral-50 p-3">
+                      <span className="text-[13px] font-extrabold text-cyan-800">{item.time}</span>
+                      <div className="grid gap-1">
+                        <h4 className="text-[15px] font-extrabold">{item.placeName}</h4>
+                        <p className="text-[13px] leading-5 text-muted">{item.activity}</p>
+                        <p className="rounded-lg bg-cyan-50 p-2 text-[12px] leading-4 text-cyan-900">Plan B: {item.planB}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </article>

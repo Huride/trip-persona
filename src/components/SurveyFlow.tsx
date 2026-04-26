@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { BudgetBand, TripLength, TripSurvey, WalkingLimit, TravelPace } from "@/src/lib/types";
+import type { BudgetBand, TravelPace, TravelRange, TravelRegionPreference, TripLength, TripSurvey, WalkingLimit } from "@/src/lib/types";
 
 type SurveyAnswers = Omit<TripSurvey, "instagramUrl" | "destinationPreference">;
 
@@ -59,6 +59,28 @@ const questions: Question[] = [
     ]
   },
   {
+    key: "regionPreference",
+    title: "국내와 해외 중 어디까지 열려 있나요?",
+    helper: "추천 후보를 처음부터 좁히는 가장 중요한 조건입니다.",
+    type: "single",
+    choices: [
+      { value: "domestic", label: "국내 여행만", helper: "서울, 제주, 부산, 목포, 남해 중심" },
+      { value: "overseas", label: "해외 여행 선호", helper: "일본, 대만, 동남아, 홍콩/마카오 중심" },
+      { value: "anywhere", label: "국내/해외 모두 괜찮음", helper: "취향에 맞으면 어디든 추천" }
+    ]
+  },
+  {
+    key: "travelRange",
+    title: "이동 시간은 어느 정도까지 괜찮나요?",
+    type: "single",
+    choices: [
+      { value: "nearby", label: "기차/차로 3시간 이내", helper: "국내 근거리와 낮은 피로도 우선" },
+      { value: "short-flight", label: "2-4시간 비행까지", helper: "일본, 대만, 홍콩/마카오까지 열어두기" },
+      { value: "long-flight", label: "5시간 이상 비행도 가능", helper: "싱가포르, 발리, 동남아 휴양지도 포함" },
+      { value: "anywhere", label: "이동 시간 상관없음", helper: "취향 적합도를 최우선으로 추천" }
+    ]
+  },
+  {
     key: "budget",
     title: "1인 총예산은 어느 정도인가요?",
     helper: "항공/교통, 숙소, 식비, 입장료를 모두 포함한 대략적인 금액입니다.",
@@ -108,6 +130,8 @@ const questions: Question[] = [
 const defaults: SurveyAnswers = {
   travelWindow: "이번 봄",
   tripLength: "2n3d",
+  regionPreference: "anywhere",
+  travelRange: "short-flight",
   budget: "300k-700k",
   companions: "partner",
   pace: "balanced",
@@ -151,6 +175,8 @@ export function SurveyFlow({ instagramUrl, onComplete }: SurveyFlowProps) {
       instagramUrl,
       destinationPreference: "recommend",
       tripLength: answers.tripLength as TripLength,
+      regionPreference: answers.regionPreference as TravelRegionPreference,
+      travelRange: answers.travelRange as TravelRange,
       budget: answers.budget as BudgetBand,
       pace: answers.pace as TravelPace,
       walkingLimit: answers.walkingLimit as WalkingLimit
