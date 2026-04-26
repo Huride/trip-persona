@@ -10,6 +10,10 @@ ${profileText}
 
 Return JSON with:
 title, summary, tasteTags, pace, crowdTolerance, confidenceNotes.
+Rules:
+- title and summary must be written in Korean.
+- summary should be 2-3 concise Korean sentences explaining the recommendation rationale.
+- tasteTags must be lowercase English slugs.
 `.trim();
 }
 

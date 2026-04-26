@@ -20,7 +20,8 @@ const profileAnalysisSchema = z.object({
   }),
   source: z.enum(["live", "sample", "pasted"]),
   username: z.string(),
-  profileEvidence: z.array(z.string())
+  profileEvidence: z.array(z.string()),
+  profileImages: z.array(z.object({ url: z.string(), alt: z.string(), source: z.string() })).optional()
 });
 
 const surveySchema = z.object({
@@ -125,6 +126,7 @@ export async function POST(request: Request) {
     destinationPlans,
     source: profileResult.source,
     profileUsername: profileResult.username,
-    profileEvidence: profileResult.profileEvidence
+    profileEvidence: profileResult.profileEvidence,
+    profileImages: profileResult.profileImages
   });
 }

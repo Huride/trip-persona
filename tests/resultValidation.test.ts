@@ -25,14 +25,34 @@ describe("result validation", () => {
       fallbackPersona
     );
 
-    expect(parsed).toEqual({
-      title: "High-Density Urban Foodie",
-      summary: "Likes food trips.",
-      tasteTags: ["food", "urban"],
-      pace: "packed",
-      crowdTolerance: "high",
-      confidenceNotes: ["high confidence"]
-    });
+    expect(parsed).toEqual(
+      expect.objectContaining({
+        title: "도시 미식 탐험가",
+        tasteTags: ["food", "urban"],
+        pace: "packed",
+        crowdTolerance: "high",
+        confidenceNotes: ["high confidence"]
+      })
+    );
+    expect(parsed.summary).toContain("로컬 미식");
+  });
+
+  it("localizes English Gemini persona titles and summaries for display", () => {
+    const parsed = parseTravelPersona(
+      {
+        title: "Energetic Trendsetter & Eco-Explorer",
+        summary: "Based on the content associated with 'Chuu Can Do It,' the travel style is characterized by high-energy urban exploration, trendy aesthetic spots, and eco-friendly activities.",
+        tasteTags: ["trendy-cafes", "eco-tourism", "hands-on-workshops", "instagrammable-spots"],
+        pace: "Fast/High-Density",
+        crowdTolerance: "High",
+        confidenceNotes: []
+      },
+      fallbackPersona
+    );
+
+    expect(parsed.title).toBe("활기찬 트렌드 탐험가");
+    expect(parsed.summary).toContain("도시 탐험");
+    expect(parsed.summary).toContain("친환경");
   });
 
   it("falls back when itinerary payload does not match UI item shape", () => {

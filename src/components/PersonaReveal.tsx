@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
+import { useState } from "react";
 import type { TripPersonaResult } from "@/src/lib/types";
 
 interface PersonaRevealProps {
@@ -11,6 +12,7 @@ interface PersonaRevealProps {
 
 export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealProps) {
   const insightCards = buildInsightCards(result);
+  const [isReasonOpen, setIsReasonOpen] = useState(false);
 
   return (
     <main className="min-h-screen bg-mist px-5 py-6 text-ink">
@@ -20,7 +22,6 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
         </p>
         <div className="grid gap-3">
           <h1 className="text-[30px] font-extrabold leading-[36px]">{result.persona.title}</h1>
-          <p className="text-[15px] leading-[22px] text-muted">{result.persona.summary}</p>
         </div>
 
         <article className="grid gap-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
@@ -28,11 +29,32 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
             <h2 className="text-[18px] font-extrabold">인스타에서 읽은 취향</h2>
             {result.profileUsername ? <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-cyan-900">@{result.profileUsername}</span> : null}
           </div>
+          {result.profileImages && result.profileImages.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {result.profileImages.map((image) => (
+                <figure key={image.url} className="w-28 shrink-0 overflow-hidden rounded-xl border border-white bg-white shadow-sm">
+                  <img src={image.url} alt={image.alt} className="aspect-square w-full object-cover" />
+                  <figcaption className="px-2 py-1 text-[10px] font-bold text-muted">{image.source}</figcaption>
+                </figure>
+              ))}
+            </div>
+          ) : null}
           <div className="grid gap-2">
             {(result.profileEvidence ?? ["프로필의 장소, 분위기, 활동 신호를 여행 조건과 함께 분석했습니다."]).map((note) => (
               <p key={note} className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{note}</p>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setIsReasonOpen((current) => !current)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-white px-3 text-[13px] font-extrabold text-cyan-900"
+          >
+            상세 추천 사유 보기
+            <ArrowDown aria-hidden="true" size={15} className={`transition ${isReasonOpen ? "rotate-180" : ""}`} />
+          </button>
+          {isReasonOpen ? (
+            <p className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{result.persona.summary}</p>
+          ) : null}
         </article>
 
         <div className="grid gap-3">

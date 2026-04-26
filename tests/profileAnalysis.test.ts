@@ -4,14 +4,14 @@ import { analyzeProfileText, buildProfileEvidence, selectFallbackSampleId } from
 describe("analyzeProfileText", () => {
   it("detects food and night market profiles without using cafe-gallery fallback", () => {
     const result = analyzeProfileText("night market street food local restaurant izakaya", "foodie");
-    expect(result.title).toContain("Food");
+    expect(result.title).toContain("미식");
     expect(result.tasteTags).toContain("food");
     expect(result.pace).toBe("packed");
   });
 
   it("detects resort and ocean profiles", () => {
     const result = analyzeProfileText("ocean beach island resort snorkeling sunset", "beach");
-    expect(result.title).toContain("Coastal");
+    expect(result.title).toContain("바다");
     expect(result.tasteTags).toContain("ocean");
   });
 });

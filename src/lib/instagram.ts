@@ -1,11 +1,13 @@
 import { chromium } from "playwright";
 import { selectFallbackSampleId } from "./profileAnalysis";
 import { sampleProfiles } from "./sampleProfiles";
+import type { ProfileEvidenceImage } from "./types";
 
 export interface InstagramProfileContent {
   source: "live" | "sample" | "pasted";
   username: string;
   profileText: string;
+  profileImages?: ProfileEvidenceImage[];
 }
 
 export async function ingestInstagramProfile(instagramUrl: string): Promise<InstagramProfileContent> {
@@ -65,6 +67,7 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
 export function parseInstagramSeoHtml(html: string, instagramUrl: string): InstagramProfileContent | null {
   const title = readMetaContent(html, "og:title");
   const description = readMetaContent(html, "og:description") ?? readMetaContent(html, "description");
+  const imageUrl = readMetaContent(html, "og:image");
   if (!title || !description) return null;
 
   const decodedTitle = decodeHtml(title);
@@ -86,7 +89,16 @@ export function parseInstagramSeoHtml(html: string, instagramUrl: string): Insta
   return {
     source: "live",
     username,
-    profileText
+    profileText,
+    profileImages: imageUrl
+      ? [
+          {
+            url: decodeHtml(imageUrl),
+            alt: `${displayName || username} Instagram profile image`,
+            source: "Instagram SEO"
+          }
+        ]
+      : []
   };
 }
 

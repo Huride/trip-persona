@@ -97,6 +97,12 @@ export interface TravelPersona {
   confidenceNotes: string[];
 }
 
+export interface ProfileEvidenceImage {
+  url: string;
+  alt: string;
+  source: string;
+}
+
 export interface DestinationRecommendation {
   destinationId: DestinationId;
   destinationName: string;
@@ -139,6 +145,7 @@ export interface TripPersonaResult {
   source?: "live" | "sample" | "pasted";
   profileUsername?: string;
   profileEvidence?: string[];
+  profileImages?: ProfileEvidenceImage[];
 }
 
 export interface RecommendationItem {
@@ -169,4 +176,5 @@ export interface ProfileAnalysisResult {
   source: "live" | "sample" | "pasted";
   username: string;
   profileEvidence: string[];
+  profileImages: ProfileEvidenceImage[];
 }

@@ -5,7 +5,7 @@ type PersonaTemplate = TravelPersona & { keywords: string[] };
 
 const templates: PersonaTemplate[] = [
   {
-    title: "Visual Destination Collector",
+    title: "비주얼 여행지 수집가",
     summary: "멋진 여행지와 사진이 잘 나오는 장면을 모아보는 여행자입니다.",
     tasteTags: ["photo", "nature", "coastal", "city", "travel"],
     pace: "balanced",
@@ -14,7 +14,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["travel", "trip", "destination", "destinations", "wanderlust", "journey", "explore", "hotel", "resort", "여행"]
   },
   {
-    title: "Dense City Food Explorer",
+    title: "도시 미식 탐험가",
     summary: "로컬 미식과 도시 에너지를 짧고 밀도 있게 즐기는 여행자입니다.",
     tasteTags: ["food", "local-food", "city", "night", "packed"],
     pace: "packed",
@@ -23,7 +23,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["food", "맛집", "restaurant", "dining", "night", "market", "izakaya", "bar", "street food", "야시장"]
   },
   {
-    title: "Slow Coastal Rest Traveler",
+    title: "바다 휴식 여행자",
     summary: "바다와 휴식, 낮은 이동 강도를 선호하는 여행자입니다.",
     tasteTags: ["coastal", "ocean", "slow", "rest", "photo"],
     pace: "slow",
@@ -32,7 +32,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["ocean", "sea", "beach", "바다", "island", "resort", "snorkeling", "sunset", "healing", "휴식"]
   },
   {
-    title: "Design City Culture Seeker",
+    title: "감도 높은 문화 탐색가",
     summary: "도시의 디자인, 전시, 편집숍, 카페를 촘촘히 탐색하는 여행자입니다.",
     tasteTags: ["design", "gallery", "cafes", "shopping", "urban"],
     pace: "balanced",
@@ -41,7 +41,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["design", "gallery", "museum", "전시", "art", "bookstore", "shopping", "brand", "cafe", "coffee"]
   },
   {
-    title: "Quiet Local Slow Traveler",
+    title: "조용한 로컬 산책가",
     summary: "유명 관광지보다 조용한 동네, 로컬 산책, 작은 식당을 선호하는 여행자입니다.",
     tasteTags: ["quiet", "local", "slow", "walk", "retro"],
     pace: "slow",

@@ -20,6 +20,7 @@ export async function analyzeInstagramProfile(instagramUrl: string): Promise<Pro
     persona,
     source: ingested.source,
     username: ingested.username,
-    profileEvidence: buildProfileEvidence(persona, ingested.username, ingested.source)
+    profileEvidence: buildProfileEvidence(persona, ingested.username, ingested.source),
+    profileImages: ingested.profileImages ?? []
   };
 }

@@ -59,8 +59,8 @@ function normalizePersona(value: unknown): unknown {
   if (!value || typeof value !== "object") return value;
   const record = value as Record<string, unknown>;
   return {
-    title: typeof record.title === "string" ? record.title : undefined,
-    summary: typeof record.summary === "string" ? record.summary : undefined,
+    title: typeof record.title === "string" ? localizePersonaTitle(record.title, record.tasteTags) : undefined,
+    summary: typeof record.summary === "string" ? localizePersonaSummary(record.summary, record.tasteTags) : undefined,
     tasteTags: Array.isArray(record.tasteTags)
       ? record.tasteTags.map((tag) => String(tag).toLowerCase().replace(/\s+/g, "-"))
       : undefined,
@@ -89,4 +89,39 @@ function normalizeCrowdTolerance(value: unknown): TravelPersona["crowdTolerance"
   if (/(medium|moderate|보통|중간)/.test(text)) return "medium";
   if (/(unknown|unclear|모름)/.test(text)) return "unknown";
   return undefined;
+}
+
+function localizePersonaTitle(title: string, rawTags: unknown): string {
+  if (/[가-힣]/.test(title)) return title;
+  const text = `${title} ${Array.isArray(rawTags) ? rawTags.join(" ") : ""}`.toLowerCase();
+
+  if (/(eco|sustainable|trend|aesthetic|workshop|instagrammable)/.test(text)) return "활기찬 트렌드 탐험가";
+  if (/(food|foodie|market|dining)/.test(text)) return "도시 미식 탐험가";
+  if (/(coastal|ocean|beach|resort)/.test(text)) return "바다 휴식 여행자";
+  if (/(design|gallery|art|culture)/.test(text)) return "감도 높은 문화 탐색가";
+  if (/(quiet|local|slow|retro)/.test(text)) return "조용한 로컬 산책가";
+  if (/(destination|photo|visual|travel)/.test(text)) return "비주얼 여행지 수집가";
+  return "취향 기반 여행자";
+}
+
+function localizePersonaSummary(summary: string, rawTags: unknown): string {
+  if (/[가-힣]/.test(summary)) return summary;
+  const text = `${summary} ${Array.isArray(rawTags) ? rawTags.join(" ") : ""}`.toLowerCase();
+
+  if (/(eco|sustainable|trend|aesthetic|workshop|instagrammable)/.test(text)) {
+    return "트렌디한 감도, 공유하고 싶은 장면, 친환경적인 활동에 반응하는 여행 성향입니다. 도시 탐험과 체험형 코스를 빠르게 오가며, 사진으로 남기기 좋은 장소와 자연이 섞인 일정을 선호합니다.";
+  }
+  if (/(food|foodie|market|dining)/.test(text)) {
+    return "로컬 미식과 활기 있는 거리 경험을 중심으로 여행 만족도가 높아지는 성향입니다. 짧은 시간 안에 맛집, 야시장, 도심 산책을 밀도 있게 묶는 일정이 잘 맞습니다.";
+  }
+  if (/(coastal|ocean|beach|resort)/.test(text)) {
+    return "바다, 리조트, 노을처럼 휴식감이 큰 장면에 강하게 반응하는 성향입니다. 이동 피로를 낮추고 여유로운 사진 포인트를 넣은 일정이 잘 맞습니다.";
+  }
+  if (/(design|gallery|art|culture)/.test(text)) {
+    return "전시, 디자인, 감도 높은 카페와 편집숍을 통해 여행지를 해석하는 성향입니다. 도시 안에서 취향이 분명한 동네를 연결하는 일정이 잘 맞습니다.";
+  }
+  if (/(destination|photo|visual|travel)/.test(text)) {
+    return "사진으로 남기기 좋은 여행지와 상징적인 장면을 모아보는 성향입니다. 도시와 자연을 균형 있게 섞고, 대표 포토 스팟을 중심으로 일정을 잡는 편이 잘 맞습니다.";
+  }
+  return "프로필에서 반복되는 장소, 분위기, 활동 신호를 바탕으로 여행 취향을 정리했습니다.";
 }

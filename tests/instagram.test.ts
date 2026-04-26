@@ -7,6 +7,7 @@ describe("parseInstagramSeoHtml", () => {
       <html><head>
         <meta property="og:title" content="BEAUTIFUL DESTINATIONS (&#064;beautifuldestinations) &#x2022; Instagram photos and videos" />
         <meta property="og:description" content="25M Followers, 45 Following, 14K Posts - See Instagram photos and videos from BEAUTIFUL DESTINATIONS (&#064;beautifuldestinations)" />
+        <meta property="og:image" content="https://cdn.example.com/profile.jpg?size=100" />
       </head></html>
     `;
 
@@ -20,6 +21,13 @@ describe("parseInstagramSeoHtml", () => {
     );
     expect(result?.profileText).toContain("BEAUTIFUL DESTINATIONS");
     expect(result?.profileText).toContain("@beautifuldestinations");
+    expect(result?.profileImages).toEqual([
+      {
+        url: "https://cdn.example.com/profile.jpg?size=100",
+        alt: "BEAUTIFUL DESTINATIONS Instagram profile image",
+        source: "Instagram SEO"
+      }
+    ]);
   });
 
   it("returns null when SEO metadata is not present", () => {
