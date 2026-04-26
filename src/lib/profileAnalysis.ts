@@ -106,17 +106,23 @@ export function selectFallbackSampleId(input: string): "cafe-gallery" | "ocean-n
 }
 
 export function buildProfileEvidence(persona: TravelPersona, username: string, source: InstagramProfileContent["source"]): string[] {
-  const tagLabels = persona.tasteTags.map(labelTasteTag).filter(Boolean);
+  const tagLabels = persona.tasteTags.map((tag) => persona.tasteTagLabels?.[tag] ?? labelTasteTag(tag)).filter(Boolean);
   const uniqueLabels = [...new Set(tagLabels)];
   const sourceLabel = source === "live" ? "실제 공개 프로필" : "접근 제한으로 보정한 프로필 샘플";
   const paceLabel = persona.pace === "packed" ? "짧은 시간에 여러 장면을 담는 고밀도 여행" : persona.pace === "slow" ? "한 장소를 오래 즐기는 여유형 여행" : "대표 코스와 여유를 섞는 균형형 여행";
   const crowdLabel = persona.crowdTolerance === "low" ? "혼잡한 장소는 피하는 쪽" : persona.crowdTolerance === "high" ? "활기 있는 장소도 무리 없는 쪽" : "혼잡도는 중간 수준까지 허용";
 
   return [
-    `${username}의 ${sourceLabel}에서 ${uniqueLabels.slice(0, 4).join(", ")} 신호가 두드러졌어요.`,
+    `${formatInstagramHandle(username)} ${sourceLabel}에서 ${uniqueLabels.slice(0, 4).join(", ")} 신호가 두드러졌어요.`,
     `일정은 ${paceLabel}으로 잡는 편이 어울립니다.`,
     `${crowdLabel}이라 시간대와 Plan B를 함께 제안합니다.`
   ];
+}
+
+function formatInstagramHandle(username: string): string {
+  const normalized = username.replace(/^@/, "");
+  if (!normalized) return "@instagram";
+  return `@${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}`;
 }
 
 function labelTasteTag(tag: string): string {
@@ -161,11 +167,18 @@ function labelTasteTag(tag: string): string {
     "pop-up-stores": "팝업 스토어",
     "aesthetic-cafes": "감성 카페",
     "social-travel": "소셜 여행",
+    "social-gatherings": "사교적 여행",
     "interactive-experiences": "참여형 경험",
     "vibrant-energy": "밝은 에너지",
     "photo-worthy": "사진 남기기 좋은 곳",
-    "collaboration-centric": "함께 즐기는 경험"
+    photography: "사진 중심",
+    "active-vibes": "활기찬 분위기",
+    "active-experience": "활기찬 체험",
+    "collaboration-centric": "함께 즐기는 경험",
+    "social-gathering": "사람들과 함께하는 장면",
+    "city-tour": "도시 투어",
+    "activity-focused": "활동 중심"
   };
 
-  return labels[tag] ?? tag;
+  return labels[tag] ?? tag.split("-").filter(Boolean).map((word) => labels[word] ?? word).join(" ");
 }

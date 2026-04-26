@@ -31,7 +31,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
         <article className="grid gap-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-[18px] font-extrabold">인스타에서 읽은 취향</h2>
-            {result.profileUsername ? <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-cyan-900">@{result.profileUsername}</span> : null}
+            {result.profileUsername ? <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-cyan-900">{formatInstagramHandle(result.profileUsername)}</span> : null}
           </div>
 
           {tasteTags.length > 0 ? (
@@ -47,7 +47,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
                       isActive ? "border-cyan-800 bg-white text-cyan-900 shadow-sm" : "border-cyan-200 bg-cyan-50 text-cyan-800"
                     }`}
                   >
-                    {labelPersonaTag(tag)}
+                    {labelPersonaTag(tag, result.persona.tasteTagLabels)}
                   </button>
                 );
               })}
@@ -81,7 +81,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
           <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
           <div className="flex flex-wrap gap-2">
             {result.persona.tasteTags.map((tag) => (
-              <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag)}</span>
+              <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag, result.persona.tasteTagLabels)}</span>
             ))}
           </div>
           <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
@@ -105,12 +105,20 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
 
 function getImagesForTag(images: ProfileEvidenceImage[], tag?: string): ProfileEvidenceImage[] {
   if (!tag || images.length === 0) return images;
-  return images.filter((image, index) => imageMatchesTag(image, tag, index)).slice(0, 6);
+  const matched = images.filter((image, index) => imageMatchesTag(image, tag, index));
+  if (matched.length > 0) return matched.slice(0, 6);
+
+  const bucket = hashTag(tag) % Math.min(5, images.length);
+  return images.filter((_, index) => index % Math.min(5, images.length) === bucket).slice(0, 6);
+}
+
+function hashTag(tag: string): number {
+  return [...tag].reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
 function imageMatchesTag(image: ProfileEvidenceImage, tag: string, index: number): boolean {
   const text = `${image.alt} ${image.source}`.toLowerCase();
-  if (text.includes("instagram public mirror")) return true;
+  if (image.tags?.includes(tag)) return true;
   if (
     [
       "eco-friendly",
@@ -121,13 +129,17 @@ function imageMatchesTag(image: ProfileEvidenceImage, tag: string, index: number
       "pop-up-stores",
       "aesthetic-cafes",
       "social-travel",
+      "social-gatherings",
       "interactive-experiences",
       "vibrant-energy",
       "photo-worthy",
+      "photography",
+      "active-vibes",
+      "active-experience",
       "collaboration-centric"
     ].includes(tag)
   ) {
-    return /instagram public mirror|chuucandoit|instagram update|photo by|cafe|coffee|카페/.test(text);
+    return /photo by|cafe|coffee|카페|pop-up|workshop|activity|eco|sustainable/.test(text);
   }
   if (["specialty-coffee", "cafe-hopping", "trendy-cafes", "cafes"].includes(tag)) {
     return /cafe|coffee|카페|커피|앤트러사이트|서교/.test(text);
@@ -145,6 +157,12 @@ function imageMatchesTag(image: ProfileEvidenceImage, tag: string, index: number
     return /food|restaurant|cafe|맛|식당|카페|market/.test(text);
   }
   return false;
+}
+
+function formatInstagramHandle(username: string): string {
+  const normalized = username.replace(/^@/, "");
+  if (!normalized) return "@instagram";
+  return `@${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}`;
 }
 
 function buildInsightCards(result: TripPersonaResult) {
@@ -171,7 +189,8 @@ function buildInsightCards(result: TripPersonaResult) {
   ];
 }
 
-function labelPersonaTag(tag: string): string {
+function labelPersonaTag(tag: string, dynamicLabels?: Record<string, string>): string {
+  if (dynamicLabels?.[tag]) return dynamicLabels[tag];
   const labels: Record<string, string> = {
     food: "미식",
     "local-food": "로컬 미식",
@@ -213,13 +232,20 @@ function labelPersonaTag(tag: string): string {
     "pop-up-stores": "팝업 스토어",
     "aesthetic-cafes": "감성 카페",
     "social-travel": "소셜 여행",
+    "social-gatherings": "사교적 여행",
     "interactive-experiences": "참여형 경험",
     "vibrant-energy": "밝은 에너지",
     "photo-worthy": "사진 남기기 좋은 곳",
-    "collaboration-centric": "함께 즐기는 경험"
+    photography: "사진 중심",
+    "active-vibes": "활기찬 분위기",
+    "active-experience": "활기찬 체험",
+    "collaboration-centric": "함께 즐기는 경험",
+    "social-gathering": "사람들과 함께하는 장면",
+    "city-tour": "도시 투어",
+    "activity-focused": "활동 중심"
   };
 
-  return labels[tag] ?? tag;
+  return labels[tag] ?? tag.split("-").filter(Boolean).map((word) => labels[word] ?? word).join(" ");
 }
 
 function PersonaMetric({ label, value }: { label: string; value: number }) {

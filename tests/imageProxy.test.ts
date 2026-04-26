@@ -8,6 +8,7 @@ describe("isAllowedProxyImageUrl", () => {
 
   it("allows known public mirror image URLs for demo fallback evidence", () => {
     expect(isAllowedProxyImageUrl("https://legacy.kpopping.com/e0/4/chuucandoit-photo.jpeg")).toBe(true);
+    expect(isAllowedProxyImageUrl("https://kpopping.com/documents/e0/4/chuucandoit-photo.jpeg")).toBe(true);
   });
 
   it("rejects non-image proxy targets outside the allowlist", () => {

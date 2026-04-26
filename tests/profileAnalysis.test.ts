@@ -42,7 +42,7 @@ describe("buildProfileEvidence", () => {
     const persona = analyzeProfileText("night market street food local restaurant izakaya", "foodie");
     const evidence = buildProfileEvidence(persona, "foodie", "live");
 
-    expect(evidence.join(" ")).toContain("foodie");
+    expect(evidence.join(" ")).toContain("@Foodie");
     expect(evidence.join(" ")).toContain("미식");
   });
 

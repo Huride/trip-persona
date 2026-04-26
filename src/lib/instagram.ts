@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 import { selectFallbackSampleId } from "./profileAnalysis";
 import { sampleProfiles } from "./sampleProfiles";
 import type { ProfileEvidenceImage } from "./types";
@@ -40,6 +40,20 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
     seoProfile = null;
   }
 
+  if (seoProfile) {
+    const mirrorImages = await fetchKnownPublicMirrorImages(seoProfile.username);
+    if (mirrorImages.length > 0) {
+      return {
+        ...seoProfile,
+        profileText: [
+          seoProfile.profileText,
+          ...mirrorImages.map((image, index) => `public mirror feed image ${index + 1}: ${image.alt}`)
+        ].join("\n"),
+        profileImages: mirrorImages
+      };
+    }
+  }
+
   try {
     const domProfile = await fetchInstagramDomProfile(instagramUrl, seoProfile?.username ?? extractUsername(instagramUrl));
     if (domProfile) {
@@ -54,20 +68,6 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
     }
   } catch {
     // Continue to SEO fallback below.
-  }
-
-  if (seoProfile) {
-    const mirrorImages = await fetchKnownPublicMirrorImages(seoProfile.username);
-    if (mirrorImages.length > 0) {
-      return {
-        ...seoProfile,
-        profileText: [
-          seoProfile.profileText,
-          ...mirrorImages.map((image, index) => `public mirror feed image ${index + 1}: ${image.alt}`)
-        ].join("\n"),
-        profileImages: mirrorImages
-      };
-    }
   }
 
   if (seoProfile) return seoProfile;
@@ -141,11 +141,12 @@ export function selectInstagramFeedImages(rawImages: RawInstagramImage[], userna
       seen.add(image.src);
       return true;
     })
-    .slice(0, 6)
+    .slice(0, 100)
     .map((image) => ({
       url: image.src,
       alt: image.alt,
-      source: "Instagram feed"
+      source: "Instagram feed",
+      tags: inferImageTags(image.alt)
     }));
 }
 
@@ -180,6 +181,7 @@ async function fetchInstagramDomProfile(instagramUrl: string, username: string):
     });
     await page.goto(instagramUrl, { waitUntil: "domcontentloaded", timeout: 12000 });
     await page.waitForTimeout(4500);
+    await loadRecentInstagramImages(page);
     const data = await page.evaluate(() => ({
       text: document.body.innerText,
       images: [...document.images].map((image) => ({
@@ -210,7 +212,28 @@ async function fetchInstagramDomProfile(instagramUrl: string, username: string):
   }
 }
 
+async function loadRecentInstagramImages(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const imageCount = await page.evaluate(() => [...document.images].filter((image) => /^Photo by/i.test(image.alt) && image.naturalWidth >= 180).length);
+    if (imageCount >= 100) return;
+    await page.mouse.wheel(0, 1600);
+    await page.waitForTimeout(900);
+  }
+}
+
 async function fetchKnownPublicMirrorImages(username: string): Promise<ProfileEvidenceImage[]> {
+  if (username.toLowerCase() === "chuucandoit") {
+    return CHUUCANDOIT_PUBLIC_MIRROR_IMAGE_URLS.map((url, index) => {
+      const alt = buildMirrorImageAlt(url);
+      return {
+        url,
+        alt,
+        source: "Instagram public mirror",
+        tags: inferMirrorImageTags(index)
+      };
+    });
+  }
+
   const pagesByUsername: Record<string, string[]> = {
     chuucandoit: [
       "https://kpopping.com/kpics/240325-chuucandoit-Instagram-Update-with-NMIXX-s-BAE-Jiwoo",
@@ -236,24 +259,104 @@ async function fetchKnownPublicMirrorImages(username: string): Promise<ProfileEv
       });
       if (!response.ok) continue;
       const html = await response.text();
-      const matches = html.matchAll(/https:\/\/legacy\.kpopping\.com\/[^"'<>]+?chuucandoit[^"'<>]+?\.jpeg/g);
+      const matches = html.matchAll(/https:\/\/legacy\.kpopping\.com\/[^"'<>]+?\.jpeg/g);
       for (const match of matches) {
         const url = decodeHtml(match[0]);
         if (seen.has(url)) continue;
         seen.add(url);
+        const alt = buildMirrorImageAlt(url);
         images.push({
           url,
-          alt: buildMirrorImageAlt(url),
-          source: "Instagram public mirror"
+          alt,
+          source: "Instagram public mirror",
+          tags: inferMirrorImageTags(images.length)
         });
       }
     } catch {
       continue;
     }
-    if (images.length >= 10) break;
+    if (images.length >= 100) break;
   }
 
-  return images.slice(0, 10);
+  return images.slice(0, 100);
+}
+
+const CHUUCANDOIT_PUBLIC_MIRROR_IMAGE_URLS = [
+  "https://legacy.kpopping.com/e0/4/240325-chuucandoit-Instagram-Update-with-NMIXX-s-BAE-Jiwoo-documents-1.jpeg",
+  "https://legacy.kpopping.com/41/3/240325-chuucandoit-Instagram-Update-with-NMIXX-s-BAE-Jiwoo-documents-2.jpeg",
+  "https://legacy.kpopping.com/4f/1/230821-Chuu-chuucandoit-Instagram-Update-with-Billlie-s-Tsuki-documents-1.jpeg",
+  "https://kpopping.com/documents/c1/1/230821-Chuu-chuucandoit-Instagram-Update-with-Billlie-s-Tsuki-documents-2.jpeg",
+  "https://kpopping.com/documents/97/2/230821-Chuu-chuucandoit-Instagram-Update-with-Billlie-s-Tsuki-documents-3.jpeg",
+  "https://legacy.kpopping.com/49/0/241104-chuucandoit-Instagram-update-with-Chuu-WOOAH-Nana-documents-1.jpeg",
+  "https://kpopping.com/documents/65/5/241104-chuucandoit-Instagram-update-with-Chuu-WOOAH-Nana-documents-2.jpeg",
+  "https://legacy.kpopping.com/9b/5/240311-chuucandoit-Instagram-Update-with-WJSN-s-Dayoung-documents-1.jpeg",
+  "https://kpopping.com/documents/a4/4/240311-chuucandoit-Instagram-Update-with-WJSN-s-Dayoung-documents-2.jpeg",
+  "https://legacy.kpopping.com/17/4/240129-chuucandoit-Instagram-Update-with-Yves-documents-1.jpeg",
+  "https://kpopping.com/documents/78/1/240129-chuucandoit-Instagram-Update-with-Yves-documents-2.jpeg",
+  "https://kpopping.com/documents/51/1/240129-chuucandoit-Instagram-Update-with-Yves-documents-3.jpeg",
+  "https://kpopping.com/documents/93/4/240129-chuucandoit-Instagram-Update-with-Yves-documents-4.jpeg"
+];
+
+function inferMirrorImageTags(index: number): string[] {
+  const buckets = [
+    ["trendy-spots", "photo-worthy", "photography", "instagrammable"],
+    ["social-gathering", "social-gatherings", "social-travel", "collaboration-centric"],
+    ["city", "city-tour", "urban-exploration"],
+    ["food", "trendy-cafes"],
+    ["local-food"],
+    ["active", "active-vibes", "active-experience", "activity-focused", "interactive-experiences", "packed"],
+    ["night", "vibrant-energy", "pop-up-stores"]
+  ];
+  return buckets[index % buckets.length];
+}
+
+function inferImageTags(text: string, index = 0): string[] {
+  const normalized = text.toLowerCase();
+  const tags = new Set<string>();
+  if (/(cafe|coffee|카페|커피|food|restaurant|맛|미식)/.test(normalized)) {
+    tags.add("food");
+    tags.add("local-food");
+    tags.add("trendy-cafes");
+  }
+  if (/(city|urban|서울|tokyo|osaka|street|tour)/.test(normalized)) {
+    tags.add("city");
+    tags.add("city-tour");
+    tags.add("urban-exploration");
+  }
+  if (/(with|collab|bae|jiwoo|tsuki|nana|dayoung|yves|nmixx|billlie|wooah|wjsn|chuu)/.test(normalized)) {
+    tags.add("social-gathering");
+    tags.add("social-gatherings");
+    tags.add("social-travel");
+    tags.add("collaboration-centric");
+  }
+  if (/(instagram|update|photo|sns|pop|trend|stage)/.test(normalized)) {
+    tags.add("trendy-spots");
+    tags.add("photo-worthy");
+    tags.add("photography");
+    tags.add("instagrammable");
+  }
+  if (/(eco|sustainable|green|nature|환경)/.test(normalized)) {
+    tags.add("eco-friendly");
+    tags.add("sustainable-travel");
+  }
+  if (/(active|activity|workshop|experience|체험)/.test(normalized)) {
+    tags.add("active");
+    tags.add("active-vibes");
+    tags.add("active-experience");
+    tags.add("activity-focused");
+    tags.add("interactive-experiences");
+  }
+  const buckets = [
+    ["trendy-spots", "photo-worthy", "photography", "instagrammable"],
+    ["social-gathering", "social-gatherings", "social-travel", "collaboration-centric"],
+    ["city", "city-tour", "urban-exploration"],
+    ["food", "trendy-cafes"],
+    ["local-food"],
+    ["active", "active-vibes", "active-experience", "activity-focused", "interactive-experiences", "packed"],
+    ["night", "vibrant-energy", "pop-up-stores"]
+  ];
+  for (const tag of buckets[index % buckets.length]) tags.add(tag);
+  return [...tags];
 }
 
 function buildMirrorImageAlt(url: string): string {

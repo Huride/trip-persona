@@ -92,6 +92,7 @@ export interface TravelPersona {
   title: string;
   summary: string;
   tasteTags: string[];
+  tasteTagLabels?: Record<string, string>;
   pace: TravelPace;
   crowdTolerance: "low" | "medium" | "high" | "unknown";
   confidenceNotes: string[];
@@ -101,6 +102,7 @@ export interface ProfileEvidenceImage {
   url: string;
   alt: string;
   source: string;
+  tags?: string[];
 }
 
 export interface DestinationRecommendation {

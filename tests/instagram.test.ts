@@ -59,12 +59,14 @@ describe("selectInstagramFeedImages", () => {
       {
         url: "https://cdn.example.com/feed-1.jpg",
         alt: "Photo by Johan in 앤트러사이트 서교점.",
-        source: "Instagram feed"
+        source: "Instagram feed",
+        tags: expect.any(Array)
       },
       {
         url: "https://cdn.example.com/feed-2.jpg",
         alt: "Photo by Johan on October 17, 2022.",
-        source: "Instagram feed"
+        source: "Instagram feed",
+        tags: expect.any(Array)
       }
     ]);
   });

@@ -14,6 +14,7 @@ const profileAnalysisSchema = z.object({
     title: z.string(),
     summary: z.string(),
     tasteTags: z.array(z.string()),
+    tasteTagLabels: z.record(z.string()).optional(),
     pace: z.enum(["slow", "balanced", "packed"]),
     crowdTolerance: z.enum(["low", "medium", "high", "unknown"]),
     confidenceNotes: z.array(z.string())
@@ -21,7 +22,7 @@ const profileAnalysisSchema = z.object({
   source: z.enum(["live", "sample", "pasted"]),
   username: z.string(),
   profileEvidence: z.array(z.string()),
-  profileImages: z.array(z.object({ url: z.string(), alt: z.string(), source: z.string() })).optional()
+  profileImages: z.array(z.object({ url: z.string(), alt: z.string(), source: z.string(), tags: z.array(z.string()).optional() })).optional()
 });
 
 const surveySchema = z.object({

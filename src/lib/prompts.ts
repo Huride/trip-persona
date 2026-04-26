@@ -9,11 +9,12 @@ Profile content:
 ${profileText}
 
 Return JSON with:
-title, summary, tasteTags, pace, crowdTolerance, confidenceNotes.
+title, summary, tasteTags, tasteTagLabels, pace, crowdTolerance, confidenceNotes.
 Rules:
 - title and summary must be written in Korean.
 - summary should be 2-3 concise Korean sentences explaining the recommendation rationale.
 - tasteTags must be lowercase English slugs.
+- tasteTagLabels must be an object whose keys are exactly the tasteTags and whose values are short Korean labels for UI chips.
 `.trim();
 }
 

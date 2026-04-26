@@ -5,6 +5,7 @@ const travelPersonaSchema = z.object({
   title: z.string(),
   summary: z.string(),
   tasteTags: z.array(z.string()),
+  tasteTagLabels: z.record(z.string()).optional(),
   pace: z.enum(["slow", "balanced", "packed"]),
   crowdTolerance: z.enum(["low", "medium", "high", "unknown"]),
   confidenceNotes: z.array(z.string())
@@ -58,12 +59,14 @@ export function parseItineraryPayload(value: unknown, fallback: ItineraryPayload
 function normalizePersona(value: unknown): unknown {
   if (!value || typeof value !== "object") return value;
   const record = value as Record<string, unknown>;
+  const tasteTags = Array.isArray(record.tasteTags)
+    ? record.tasteTags.map((tag) => String(tag).toLowerCase().replace(/\s+/g, "-"))
+    : undefined;
   return {
     title: typeof record.title === "string" ? localizePersonaTitle(record.title, record.tasteTags) : undefined,
     summary: typeof record.summary === "string" ? localizePersonaSummary(record.summary, record.tasteTags) : undefined,
-    tasteTags: Array.isArray(record.tasteTags)
-      ? record.tasteTags.map((tag) => String(tag).toLowerCase().replace(/\s+/g, "-"))
-      : undefined,
+    tasteTags,
+    tasteTagLabels: normalizeTasteTagLabels(record.tasteTagLabels, tasteTags),
     pace: normalizePace(record.pace),
     crowdTolerance: normalizeCrowdTolerance(record.crowdTolerance),
     confidenceNotes: Array.isArray(record.confidenceNotes)
@@ -72,6 +75,49 @@ function normalizePersona(value: unknown): unknown {
         ? [record.confidenceNotes]
         : []
   };
+}
+
+function normalizeTasteTagLabels(value: unknown, tasteTags?: string[]): Record<string, string> | undefined {
+  if (!tasteTags || tasteTags.length === 0) return undefined;
+  const labels: Record<string, string> = {};
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    for (const [key, label] of Object.entries(value)) {
+      const normalizedKey = key.toLowerCase().replace(/\s+/g, "-");
+      if (tasteTags.includes(normalizedKey) && typeof label === "string" && /[가-힣]/.test(label)) {
+        labels[normalizedKey] = label;
+      }
+    }
+  }
+  for (const tag of tasteTags) {
+    labels[tag] = labels[tag] ?? localizeTasteTag(tag);
+  }
+  return labels;
+}
+
+function localizeTasteTag(tag: string): string {
+  const labels: Record<string, string> = {
+    food: "미식",
+    "local-food": "로컬 미식",
+    city: "도시 산책",
+    urban: "도시 감도",
+    night: "야간 무드",
+    packed: "고밀도 일정",
+    "social-gathering": "사람들과 함께하는 장면",
+    "social-gatherings": "사교적 여행",
+    "city-tour": "도시 투어",
+    "activity-focused": "활동 중심",
+    "trendy-spots": "트렌디한 장소",
+    "photo-worthy": "사진 남기기 좋은 곳",
+    "social-travel": "소셜 여행",
+    "interactive-experiences": "참여형 경험",
+    "vibrant-energy": "밝은 에너지",
+    photography: "사진 중심",
+    "active-vibes": "활기찬 분위기",
+    "active-experience": "활기찬 체험",
+    "pop-up-stores": "팝업 스토어",
+    "collaboration-centric": "함께 즐기는 경험"
+  };
+  return labels[tag] ?? tag.split("-").filter(Boolean).map((word) => labels[word] ?? word).join(" ");
 }
 
 function normalizePace(value: unknown): TravelPersona["pace"] | undefined {
