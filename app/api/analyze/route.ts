@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { buildDestinationPlans } from "@/src/lib/destinationPlans";
 import { places } from "@/src/lib/destinations";
 import { generateJson } from "@/src/lib/gemini";
 import { ingestInstagramProfile } from "@/src/lib/instagram";
@@ -12,12 +13,12 @@ import type { TripSurvey } from "@/src/lib/types";
 const surveySchema = z.object({
   instagramUrl: z.string().min(1),
   travelWindow: z.string().min(1),
-  tripLength: z.enum(["day-trip", "1n2d", "2n3d"]),
+  tripLength: z.enum(["day-trip", "1n2d", "2n3d", "3n4d", "4plus"]),
   destinationPreference: z.union([
     z.enum(["seoul", "jeju", "busan", "mokpo", "namhae", "tokyo", "osaka", "kamakura", "matsuyama", "miyakojima", "kaohsiung"]),
     z.literal("recommend")
   ]),
-  budget: z.enum(["low", "medium", "high"]),
+  budget: z.enum(["under-100k", "100k-300k", "300k-700k", "700k-1200k", "over-1200k"]),
   companions: z.enum(["solo", "partner", "friends", "family", "parents"]),
   pace: z.enum(["slow", "balanced", "packed"]),
   walkingLimit: z.enum(["under-5k", "under-10k", "no-limit"]),
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
 
   const selectedDestinationId = destinations[0].destinationId;
   const seedPlaces = places.filter((place) => place.destinationId === selectedDestinationId);
+  const destinationPlans = buildDestinationPlans(destinations, survey);
   const fallbackItineraryPayload = {
     itinerary: seedPlaces.slice(0, 3).map((place, index) => ({
       time: ["10:00", "13:00", "16:00"][index] ?? "18:00",
@@ -80,6 +82,7 @@ export async function POST(request: Request) {
     itinerary: itineraryPayload.itinerary,
     whyThisFits: itineraryPayload.whyThisFits,
     excludedPlaces: itineraryPayload.excludedPlaces,
+    destinationPlans,
     source: ingested.source
   });
 }

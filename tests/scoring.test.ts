@@ -16,7 +16,7 @@ const survey: TripSurvey = {
   travelWindow: "spring",
   tripLength: "1n2d",
   destinationPreference: "recommend",
-  budget: "medium",
+  budget: "300k-700k",
   companions: "partner",
   pace: "slow",
   walkingLimit: "under-10k",

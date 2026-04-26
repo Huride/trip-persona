@@ -11,10 +11,10 @@ export type DestinationId =
   | "miyakojima"
   | "kaohsiung";
 
-export type TripLength = "day-trip" | "1n2d" | "2n3d";
+export type TripLength = "day-trip" | "1n2d" | "2n3d" | "3n4d" | "4plus";
 export type TravelPace = "slow" | "balanced" | "packed";
 export type WalkingLimit = "under-5k" | "under-10k" | "no-limit";
-export type BudgetBand = "low" | "medium" | "high";
+export type BudgetBand = "under-100k" | "100k-300k" | "300k-700k" | "700k-1200k" | "over-1200k";
 export type CostLevel = "free" | "low" | "medium" | "high";
 export type WalkingLoad = "low" | "medium" | "high";
 
@@ -95,4 +95,27 @@ export interface TripPersonaResult {
   itinerary: ItineraryItem[];
   whyThisFits: string[];
   excludedPlaces: string[];
+  destinationPlans: DestinationPlan[];
+}
+
+export interface RecommendationItem {
+  name: string;
+  summary: string;
+  why: string;
+}
+
+export interface DestinationPhoto {
+  url: string;
+  alt: string;
+  credit: string;
+}
+
+export interface DestinationPlan {
+  destination: DestinationRecommendation;
+  photo: DestinationPhoto;
+  transport: RecommendationItem[];
+  stays: RecommendationItem[];
+  restaurants: RecommendationItem[];
+  photoSpots: RecommendationItem[];
+  itinerary: ItineraryItem[];
 }

@@ -12,14 +12,15 @@ Implemented:
 - Gemini model updated to `gemini-3-flash-preview`; helper now tries `GEMINI_API_KEY` and `GEMINI_API_KEY_1` through `GEMINI_API_KEY_4` without exposing keys to the browser.
 - Best-effort Instagram ingestion using Playwright with sample fallback.
 - `/api/analyze` endpoint that combines ingestion, persona analysis, ranking, concepts, and itinerary.
-- Main UI workflow for profile URL input, travel survey, loading state, error state, and results.
+- Mobile staged workflow for profile entry, analysis survey, finalizing, persona reveal, and destination recommendations.
+- Destination-specific recommendation plans with photo, transport, stays, restaurants, photo spots, and itinerary.
 - YDS-inspired cyan UI refresh for a more practical dev MVP surface.
 - Demo script for reliable judging runs.
 
 Verification:
-- `npm test`: 3 files, 6 tests passed.
+- `npm test`: 4 files, 8 tests passed.
 - `npm run build`: production build passed.
-- Browser smoke: mobile sample submission renders results without horizontal overflow.
+- Browser smoke: mobile sample submission completes entry, survey, persona reveal, and recommendations without horizontal overflow.
 
 Demo inputs:
 - `sample:cafe-gallery`
