@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TripPersona — 3min Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Pretendard:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F4F1EA;
+    --bg-dark: #1A1814;
+    --ink: #1A1814;
+    --ink-soft: #4A453E;
+    --ink-muted: #8B857A;
+    --accent: #E85A2C;
+    --accent-soft: #F3D5C4;
+    --teal: #2C5F5D;
+    --teal-soft: #C8DAD7;
+    --gold: #B8923D;
+    --line: rgba(26, 24, 20, 0.12);
+    --line-strong: rgba(26, 24, 20, 0.25);
+  }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Pretendard', sans-serif;
+    overflow-x: hidden;
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Slide layout ===== */
+  .deck {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 40px 24px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .slide {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 64px 72px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-num {
+    position: absolute;
+    top: 32px;
+    right: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
+  }
+  .slide-tag {
+    position: absolute;
+    top: 32px;
+    left: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .slide-time {
+    position: absolute;
+    bottom: 32px;
+    right: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .display {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* ===== Slide 1 — Title ===== */
+  .slide-1 {
+    background: var(--bg-dark);
+    color: var(--bg);
+    justify-content: space-between;
+  }
+  .slide-1 .slide-num,
+  .slide-1 .slide-tag,
+  .slide-1 .slide-time { color: rgba(244, 241, 234, 0.45); }
+  .slide-1 .top-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 24px;
+  }
+  .slide-1 h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 132px;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-top: auto;
+  }
+  .slide-1 h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  .slide-1 .subtitle {
+    font-size: 18px;
+    color: rgba(244, 241, 234, 0.65);
+    margin-top: 24px;
+    max-width: 560px;
+    line-height: 1.5;
+  }
+  .slide-1 .meta-bar {
+    display: flex;
+    gap: 32px;
+    margin-top: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(244, 241, 234, 0.6);
+    letter-spacing: 0.1em;
+  }
+  .slide-1 .meta-bar span strong { color: var(--bg); font-weight: 500; }
+
+  /* ===== Slide 2 — Problem ===== */
+  .slide-2 .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: auto;
+    margin-bottom: auto;
+    align-items: center;
+  }
+  .slide-2 .problem-quote {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 56px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .slide-2 .problem-quote .accent {
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0 12px;
+    font-style: normal;
+    font-weight: 400;
+  }
+  .slide-2 .stats { display: flex; flex-direction: column; gap: 24px; }
+  .slide-2 .stat {
+    border-left: 2px solid var(--ink);
+    padding-left: 20px;
+  }
+  .slide-2 .stat .num {
+    font-family: 'Fraunces', serif;
+    font-size: 64px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .slide-2 .stat .label {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+  .slide-2 .stat .src {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== Slide 3 — Solution ===== */
+  .slide-3 .head {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 44px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    max-width: 720px;
+  }
+  .slide-3 .head em { font-style: italic; color: var(--accent); }
+  .slide-3 .flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: auto;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .slide-3 .step {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 24px 20px;
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-3 .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+  .slide-3 .step-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    margin-bottom: 12px;
+  }
+  .slide-3 .step-body {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin-top: auto;
+  }
+  .slide-3 .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 16px;
+    z-index: 2;
+    background: var(--bg);
+    padding: 0 4px;
+  }
+  .slide-3 .arrow-1 { left: calc(25% - 8px); }
+  .slide-3 .arrow-2 { left: calc(50% - 8px); }
+  .slide-3 .arrow-3 { left: calc(75% - 8px); }
+
+  /* ===== Slide 4 — Demo intro ===== */
+  .slide-4 {
+    background: var(--bg-dark);
+    color: var(--bg);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .slide-4 .slide-num,
+  .slide-4 .slide-tag,
+  .slide-4 .slide-time { color: rgba(244, 241, 234, 0.45); }
+  .slide-4 .demo-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .slide-4 h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 96px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .slide-4 h2 em { font-style: italic; color: var(--accent); }
+  .slide-4 .demo-sub {
+    font-size: 17px;
+    color: rgba(244, 241, 234, 0.65);
+    margin-top: 28px;
+    max-width: 600px;
+    line-height: 1.55;
+  }
+  .slide-4 .scenario {
+    margin-top: 40px;
+    padding: 16px 24px;
+    border: 1px solid rgba(244, 241, 234, 0.15);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(244, 241, 234, 0.7);
+    letter-spacing: 0.05em;
+  }
+  .slide-4 .scenario strong { color: var(--accent); font-weight: 500; }
+
+  /* ===== Slide 5 — Demo flow visual ===== */
+  .slide-5 .head {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 36px;
+    letter-spacing: -0.02em;
+    margin-bottom: 28px;
+  }
+  .slide-5 .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    flex: 1;
+  }
+  .slide-5 .screen {
+    border: 1px solid var(--line-strong);
+    background: white;
+    padding: 14px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .slide-5 .screen-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .screen-1 .input-bar {
+    border: 1px solid var(--line-strong);
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    background: #FAFAFA;
+  }
+  .screen-1 .input-bar .at { color: var(--accent); }
+  .screen-1 .btn {
+    background: var(--ink);
+    color: var(--bg);
+    text-align: center;
+    font-size: 10px;
+    padding: 8px;
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+  }
+  .screen-2 .photos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+  .screen-2 .photo {
+    aspect-ratio: 1;
+    background: var(--accent-soft);
+  }
+  .screen-2 .photo:nth-child(2) { background: var(--teal-soft); }
+  .screen-2 .photo:nth-child(3) { background: #E8DCC4; }
+  .screen-2 .photo:nth-child(4) { background: #DCC4B8; }
+  .screen-2 .photo:nth-child(5) { background: var(--accent-soft); opacity: 0.7; }
+  .screen-2 .photo:nth-child(6) { background: var(--teal-soft); opacity: 0.7; }
+  .screen-2 .tags {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .screen-2 .tag {
+    font-size: 9px;
+    padding: 3px 7px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--ink-soft);
+  }
+  .screen-2 .tag.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .screen-3 .persona-box {
+    border: 1px solid var(--line);
+    padding: 10px;
+    background: #FAFAFA;
+    flex: 1;
+  }
+  .screen-3 .persona-name {
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .screen-3 .persona-desc {
+    font-size: 9.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .screen-3 .traits {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .screen-3 .trait {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+  }
+  .screen-3 .bar {
+    height: 4px;
+    background: var(--line);
+    margin-top: 2px;
+    position: relative;
+  }
+  .screen-3 .bar-fill {
+    height: 100%;
+    background: var(--accent);
+  }
+  .screen-4 .day-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 9.5px;
+  }
+  .screen-4 .day-row:last-child { border: none; }
+  .screen-4 .time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    min-width: 40px;
+  }
+  .screen-4 .place { color: var(--ink); line-height: 1.3; }
+  .screen-4 .place small { color: var(--ink-muted); display: block; font-size: 8px; }
+  .screen-4 .booking-tag {
+    display: inline-block;
+    font-size: 8px;
+    padding: 1px 5px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 8px;
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+  }
+  .screen-4 .booking-tag.alt { background: var(--teal); }
+  .screen-4 .booking-tag.gold { background: var(--gold); }
+
+  /* ===== Slide 6 — Market & BM ===== */
+  .slide-6 .head {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 36px;
+    letter-spacing: -0.02em;
+    margin-bottom: 36px;
+  }
+  .slide-6 .head em { font-style: italic; color: var(--accent); }
+  .slide-6 .grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 56px;
+    flex: 1;
+  }
+  .slide-6 .market-stack { display: flex; flex-direction: column; gap: 10px; }
+  .slide-6 .market-row {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+  }
+  .slide-6 .market-row.tam { background: var(--bg-dark); color: var(--bg); border-color: var(--bg-dark); }
+  .slide-6 .market-row.tam .lbl { color: rgba(244,241,234,0.5); }
+  .slide-6 .market-row.tam .desc { color: rgba(244,241,234,0.75); }
+  .slide-6 .market-row.sam { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+  .slide-6 .market-row.sam .lbl { color: rgba(244,241,234,0.5); }
+  .slide-6 .market-row.sam .desc { color: rgba(244,241,234,0.85); }
+  .slide-6 .market-row.som { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .slide-6 .market-row.som .lbl { color: rgba(244,241,234,0.6); }
+  .slide-6 .market-row.som .desc { color: rgba(244,241,234,0.9); }
+  .slide-6 .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+  }
+  .slide-6 .desc {
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+  .slide-6 .amt {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .slide-6 .bm-side h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+  }
+  .slide-6 .bm-formula {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    margin-bottom: 20px;
+  }
+  .slide-6 .bm-formula .x { color: var(--accent); font-style: italic; }
+  .slide-6 .scenarios { display: flex; flex-direction: column; gap: 6px; }
+  .slide-6 .scen-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+  }
+  .slide-6 .scen-name { color: var(--ink-soft); }
+  .slide-6 .scen-amt {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .slide-6 .scen-row.target .scen-amt { color: var(--accent); }
+  .slide-6 .margin-note {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    color: #5C2410;
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+  .slide-6 .margin-note strong { font-weight: 600; }
+
+  /* ===== Slide 7 — Closing ===== */
+  .slide-7 {
+    background: var(--bg-dark);
+    color: var(--bg);
+    justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-7 .slide-num,
+  .slide-7 .slide-tag,
+  .slide-7 .slide-time { color: rgba(244, 241, 234, 0.45); }
+  .slide-7 .top-row {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 28px;
+  }
+  .slide-7 .closing {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-top: 32px;
+    color: rgba(244, 241, 234, 0.55);
+  }
+  .slide-7 .closing em {
+    font-style: italic;
+    color: rgba(244, 241, 234, 0.85);
+    font-weight: 400;
+  }
+  .slide-7 .closing .strike {
+    text-decoration: line-through;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 3px;
+    color: rgba(244, 241, 234, 0.3);
+  }
+  .slide-7 .bridge-line {
+    margin-top: 28px;
+    padding: 28px 0 20px;
+    border-top: 1px solid rgba(244, 241, 234, 0.15);
+    position: relative;
+  }
+  .slide-7 .bridge-label {
+    position: absolute;
+    top: -10px;
+    left: 0;
+    background: var(--bg-dark);
+    padding-right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .slide-7 .bridge-text {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: var(--bg);
+  }
+  .slide-7 .bridge-text em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .slide-7 .footer-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .slide-7 .footer-row .right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(244, 241, 234, 0.6);
+    letter-spacing: 0.1em;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- Slide 1: Title -->
+  <section class="slide slide-1">
+    <span class="slide-tag">CMUX × AIM Hackathon</span>
+    <span class="slide-num">01 / 06</span>
+    <div class="top-mark">Business & Applications</div>
+    <h1>Trip<em>Persona</em></h1>
+    <p class="subtitle">당신의 인스타그램은<br>이미 당신의 여행 취향을 알고 있다.</p>
+    <div class="meta-bar">
+      <span><strong>Team</strong> · Johan</span>
+      <span><strong>Track</strong> · Business & Applications</span>
+      <span><strong>Stack</strong> · Gemini · Gemini Vision · Codex · Next.js</span>
+    </div>
+    <span class="slide-time">00:00 — 00:15</span>
+  </section>
+
+  <!-- Slide 2: Problem -->
+  <section class="slide slide-2">
+    <span class="slide-tag">Problem</span>
+    <span class="slide-num">02 / 06</span>
+    <div class="grid">
+      <div class="problem-quote">
+        영감은 <span class="accent">SNS</span>에,<br>
+        일정은 여전히<br>
+        <em>노트앱</em>에.
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="num">75%</div>
+          <div class="label">SNS에서 여행 영감을 얻는 글로벌 여행자</div>
+          <div class="src">BEDSONLINE 2024</div>
+        </div>
+        <div class="stat">
+          <div class="num">84%</div>
+          <div class="label">Z세대 여행자가 SNS로 여행지 탐색</div>
+          <div class="src">PEEK PRO 2025</div>
+        </div>
+        <div class="stat">
+          <div class="num">2,430만</div>
+          <div class="label">한국 인스타그램 사용자 (5년간 +96%)</div>
+          <div class="src">와이즈앱 2024</div>
+        </div>
+      </div>
+    </div>
+    <span class="slide-time">00:15 — 00:35</span>
+  </section>
+
+  <!-- Slide 3: Solution -->
+  <section class="slide slide-3">
+    <span class="slide-tag">Solution</span>
+    <span class="slide-num">03 / 06</span>
+    <div class="head">
+      당신이 <em>저장한 사진</em>이<br>
+      당신의 다음 여행이 됩니다.
+    </div>
+    <div class="flow">
+      <div class="step">
+        <div class="step-num">STEP 01</div>
+        <div class="step-title">프로필 등록</div>
+        <div class="step-body">인스타 핸들 입력. 5초 안에 시작.</div>
+      </div>
+      <div class="arrow arrow-1">→</div>
+      <div class="step">
+        <div class="step-num">STEP 02</div>
+        <div class="step-title">취향 분석</div>
+        <div class="step-body">피드 자동 분석 + 동행·예산 간단 설문 3문항.</div>
+      </div>
+      <div class="arrow arrow-2">→</div>
+      <div class="step">
+        <div class="step-num">STEP 03</div>
+        <div class="step-title">페르소나 확인</div>
+        <div class="step-body">"카페 갤러리스트", "도시 미식 헌터" 등 한 줄 정체성으로 검증.</div>
+      </div>
+      <div class="arrow arrow-3">→</div>
+      <div class="step">
+        <div class="step-num">STEP 04</div>
+        <div class="step-title">여행 플랜</div>
+        <div class="step-body">Day별 일정 + 숙소·항공·레저 예약 링크까지 한 번에.</div>
+      </div>
+    </div>
+    <span class="slide-time">00:35 — 01:00</span>
+  </section>
+
+  <!-- Slide 4: Demo intro -->
+  <section class="slide slide-4">
+    <span class="slide-tag">Live Demo</span>
+    <span class="slide-num">04 / 06</span>
+    <div class="demo-mark">● Live demo · 90 seconds</div>
+    <h2>지금<br><em>실제로</em> 보여드릴게요.</h2>
+    <p class="demo-sub">실제 인스타 프로필을 입력하면<br>약 30초 안에 여행 플랜이 완성됩니다.</p>
+    <div class="scenario">
+      Live Demo · <strong>https://trippersona-mvp.vercel.app/</strong>
+    </div>
+    <span class="slide-time">01:00 — 02:30</span>
+  </section>
+
+  <!-- Slide 5: Market & BM -->
+  <section class="slide slide-6">
+    <span class="slide-tag">Market & Business Model</span>
+    <span class="slide-num">05 / 06</span>
+    <div class="head">
+      <em>14.6조원</em> 시장에서<br>
+      마진율 95%+ 어필리에이트 모델.
+    </div>
+    <div class="grid">
+
+      <div class="market-stack">
+        <div class="market-row tam">
+          <span class="lbl">TAM</span>
+          <span class="desc">한국 온라인 여행 전체 시장 (항공·숙박·교통·레저)</span>
+          <span class="amt">14.6조</span>
+        </div>
+        <div class="market-row sam">
+          <span class="lbl">SAM</span>
+          <span class="desc">2030 핵심 OTA 사용자 (600만명) × 인스타 영향 여행 지출</span>
+          <span class="amt">1.5조</span>
+        </div>
+        <div class="market-row som">
+          <span class="lbl">SOM</span>
+          <span class="desc">1~2년 내 획득 가능 GMV (MAU 10만 기준)</span>
+          <span class="amt">40억</span>
+        </div>
+      </div>
+
+      <div class="bm-side">
+        <h3>수익 모델</h3>
+        <div class="bm-formula">
+          예약 GMV <span class="x">×</span><br>
+          어필리에이트 5–7%
+        </div>
+        <div class="scenarios">
+          <div class="scen-row">
+            <span class="scen-name">보수 (MAU 5만 · 전환 3%)</span>
+            <span class="scen-amt">1.2억</span>
+          </div>
+          <div class="scen-row target">
+            <span class="scen-name">목표 (MAU 10만 · 전환 5%)</span>
+            <span class="scen-amt">2.4억</span>
+          </div>
+          <div class="scen-row">
+            <span class="scen-name">낙관 (MAU 30만 · 전환 7%)</span>
+            <span class="scen-amt">8.4억</span>
+          </div>
+        </div>
+        <div class="margin-note">
+          <strong>건당 비용 ≈ 300원</strong> (Gemini API + Vercel) →<br>
+          어필리에이트 수익의 <strong>95% 이상이 마진</strong>.
+        </div>
+      </div>
+
+    </div>
+    <span class="slide-time">02:30 — 02:50</span>
+  </section>
+
+  <!-- Slide 7: Closing -->
+  <section class="slide slide-7">
+    <span class="slide-tag">Closing</span>
+    <span class="slide-num">06 / 06</span>
+    <div class="top-row">One last thing</div>
+    <div class="closing">
+      75%가 인스타에서<br>
+      <em>영감</em>을 얻지만,<br>
+      <span class="strike">100%</span>가 일정은<br>
+      <em>직접</em> 짭니다.
+    </div>
+    <div class="bridge-line">
+      <span class="bridge-label">— And —</span>
+      <div class="bridge-text">
+        <em>TripPersona</em>가<br>
+        그 격차를 메웁니다.
+      </div>
+    </div>
+    <div class="footer-row">
+      <div class="right">
+        Demo · trippersona.app<br>
+        Team · Johan
+      </div>
+    </div>
+    <span class="slide-time">02:50 — 03:00</span>
+  </section>
+
+</div>
+
+</body>
+</html>
