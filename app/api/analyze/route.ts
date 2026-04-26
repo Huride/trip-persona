@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { enrichDestinationPlansWithLlm } from "@/src/lib/destinationPlanEnrichment";
 import { buildDestinationPlans } from "@/src/lib/destinationPlans";
 import { places } from "@/src/lib/destinations";
 import { generateJson } from "@/src/lib/gemini";
@@ -107,7 +108,14 @@ export async function POST(request: Request) {
 
   const selectedDestinationId = destinations[0].destinationId;
   const seedPlaces = places.filter((place) => place.destinationId === selectedDestinationId);
-  const destinationPlans = buildDestinationPlans(destinations, survey);
+  const baseDestinationPlans = buildDestinationPlans(destinations, survey);
+  const destinationPlans = await enrichDestinationPlansWithLlm({
+    plans: baseDestinationPlans,
+    persona,
+    survey,
+    profileEvidence: profileResult.profileEvidence,
+    profileImages: profileResult.profileImages
+  });
   const fallbackItineraryPayload = {
     itinerary: seedPlaces.slice(0, 3).map((place, index) => ({
       time: ["10:00", "13:00", "16:00"][index] ?? "18:00",

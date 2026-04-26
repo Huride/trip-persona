@@ -130,11 +130,14 @@ export interface TravelConcept {
 export interface ItineraryItem {
   time: string;
   placeName: string;
+  area?: string;
   activity: string;
   fitRationale: string;
   cost: CostLevel;
   walkingLoad: WalkingLoad;
   planB: string;
+  durationMinutes?: number;
+  mapUrl?: string;
 }
 
 export interface DailyItinerary {
@@ -161,6 +164,9 @@ export interface RecommendationItem {
   name: string;
   summary: string;
   why: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  businessType?: "flight" | "stay" | "activity" | "food" | "photo" | "transport";
 }
 
 export interface DestinationPhoto {
@@ -172,12 +178,22 @@ export interface DestinationPhoto {
 export interface DestinationPlan {
   destination: DestinationRecommendation;
   photo: DestinationPhoto;
+  weather: DestinationWeatherAdvice;
   transport: RecommendationItem[];
   stays: RecommendationItem[];
+  activities: RecommendationItem[];
   restaurants: RecommendationItem[];
   photoSpots: RecommendationItem[];
   itinerary: ItineraryItem[];
   dailyItinerary: DailyItinerary[];
+}
+
+export interface DestinationWeatherAdvice {
+  title: string;
+  seasonType: "dry" | "rainy" | "mixed" | "winter" | "summer" | "unknown";
+  summary: string;
+  preparation: string[];
+  cautions: string[];
 }
 
 export interface ProfileAnalysisResult {

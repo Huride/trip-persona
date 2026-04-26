@@ -43,7 +43,9 @@ describe("buildDestinationPlans", () => {
     expect(plans[0].photo.url).toContain("images.unsplash.com");
     expect(plans[0].transport.length).toBeGreaterThan(0);
     expect(plans[0].stays.length).toBeGreaterThan(0);
+    expect(plans[0].activities.length).toBeGreaterThan(0);
     expect(plans[0].restaurants.length).toBeGreaterThan(0);
+    expect(plans[0].weather.summary).toContain("5월");
     expect(plans[0].itinerary.length).toBeGreaterThan(0);
     expect(plans[0].dailyItinerary).toHaveLength(4);
     expect(plans[0].dailyItinerary[0].items.length).toBeGreaterThanOrEqual(3);
@@ -56,6 +58,7 @@ describe("buildDestinationPlans", () => {
       expect.objectContaining({
         time: expect.any(String),
         placeName: expect.any(String),
+        mapUrl: expect.stringContaining("google.com/maps/search"),
         activity: expect.any(String),
         planB: expect.any(String)
       })
@@ -80,5 +83,25 @@ describe("buildDestinationPlans", () => {
       const placeNames = day.items.map((item) => item.placeName);
       expect(new Set(placeNames).size).toBe(placeNames.length);
     }
+  });
+
+  it("adds weather preparation advice when the survey has a travel month", () => {
+    const [plan] = buildDestinationPlans(
+      [
+        {
+          destinationId: "bangkok",
+          destinationName: "방콕",
+          fitScore: 91,
+          reason: "도시 미식과 야간 무드가 잘 맞습니다.",
+          tradeOff: "더위와 소나기에 대비가 필요합니다."
+        }
+      ],
+      { ...survey, travelWindow: "8월", travelRange: "long-flight" }
+    );
+
+    expect(plan.weather.title).toContain("8월");
+    expect(plan.weather.seasonType).toBe("rainy");
+    expect(plan.weather.preparation).toContain("작은 우산 또는 얇은 우비");
+    expect(plan.weather.cautions.join(" ")).toContain("소나기");
   });
 });
