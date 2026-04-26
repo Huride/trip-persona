@@ -37,18 +37,28 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-mist px-5 py-6 text-ink">
-      <section className="mx-auto grid max-w-6xl gap-6">
-        <header className="grid gap-3">
-          <p className="text-sm font-semibold uppercase tracking-wide text-ocean">TripPersona</p>
-          <h1 className="max-w-3xl text-4xl font-bold">인스타그램 취향을 실제 여행 일정으로 바꿔주는 AI</h1>
-          <p className="max-w-2xl text-base text-neutral-600">
-            Instagram 프로필 링크를 넣고 여행 조건을 답하면, 공개 피드의 취향 신호를 여행 페르소나와 일정으로 변환합니다.
-          </p>
+    <main className="min-h-screen bg-mist px-4 py-5 text-ink sm:px-6 lg:px-8">
+      <section className="mx-auto grid max-w-6xl gap-5">
+        <header className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="grid gap-3">
+              <p className="text-[12px] font-bold uppercase text-cyan-800">TripPersona</p>
+              <h1 className="max-w-3xl text-[28px] font-extrabold leading-[34px] sm:text-[32px] sm:leading-[38px]">
+                인스타그램 취향을 실제 여행 일정으로 바꿔주는 AI
+              </h1>
+              <p className="max-w-2xl text-[15px] leading-[22px] text-muted">
+                공개 프로필의 취향 신호와 여행 조건을 결합해 페르소나, 목적지, 컨셉, 일정을 한 번에 만듭니다.
+              </p>
+            </div>
+            <div className="grid min-w-56 gap-2 rounded-xl bg-cyan-50 p-4 text-[13px] text-cyan-900">
+              <p className="font-bold">Demo-ready</p>
+              <p>샘플 입력으로 크롤링 실패 상황에서도 바로 심사 시연이 가능합니다.</p>
+            </div>
+          </div>
         </header>
         <TripForm onSubmit={handleSubmit} isLoading={isLoading} />
         {isLoading ? <LoadingAnalysis /> : null}
-        {error ? <section className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</section> : null}
+        {error ? <section className="rounded-xl border border-red-200 bg-red-50 p-4 text-[14px] text-red-700">{error}</section> : null}
         {result ? <ResultView result={result} /> : null}
       </section>
     </main>

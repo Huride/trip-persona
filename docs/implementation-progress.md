@@ -13,11 +13,13 @@ Implemented:
 - Best-effort Instagram ingestion using Playwright with sample fallback.
 - `/api/analyze` endpoint that combines ingestion, persona analysis, ranking, concepts, and itinerary.
 - Main UI workflow for profile URL input, travel survey, loading state, error state, and results.
+- YDS-inspired cyan UI refresh for a more practical dev MVP surface.
 - Demo script for reliable judging runs.
 
 Verification:
-- `npm test`: 2 files, 4 tests passed.
+- `npm test`: 3 files, 6 tests passed.
 - `npm run build`: production build passed.
+- Browser smoke: mobile sample submission renders results without horizontal overflow.
 
 Demo inputs:
 - `sample:cafe-gallery`
