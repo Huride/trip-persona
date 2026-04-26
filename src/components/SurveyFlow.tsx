@@ -25,6 +25,7 @@ interface Question {
   title: string;
   helper?: string;
   type: "single" | "multi" | "text";
+  layout?: "cards" | "chips";
   choices?: Choice[];
 }
 
@@ -32,8 +33,10 @@ const questions: Question[] = [
   {
     key: "travelWindow",
     title: "언제 떠나나요?",
-    helper: "대략적인 계절이나 월만 알려줘도 충분해요.",
-    type: "text"
+    helper: "정확한 날짜가 아니어도 떠날 월만 골라주세요.",
+    type: "single",
+    layout: "chips",
+    choices: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"].map((item) => ({ value: item, label: item }))
   },
   {
     key: "tripLength",
@@ -57,17 +60,6 @@ const questions: Question[] = [
       { value: "friends", label: "친구와" },
       { value: "family", label: "가족과" },
       { value: "parents", label: "부모님과" }
-    ]
-  },
-  {
-    key: "regionPreference",
-    title: "국내와 해외 중 어디까지 열려 있나요?",
-    helper: "추천 후보를 처음부터 좁히는 가장 중요한 조건입니다.",
-    type: "single",
-    choices: [
-      { value: "domestic", label: "국내 여행만", helper: "서울, 제주, 부산, 목포, 남해 중심" },
-      { value: "overseas", label: "해외 여행 선호", helper: "일본, 대만, 동남아, 홍콩/마카오 중심" },
-      { value: "anywhere", label: "국내/해외 모두 괜찮음", helper: "취향에 맞으면 어디든 추천" }
     ]
   },
   {
@@ -105,31 +97,23 @@ const questions: Question[] = [
     ]
   },
   {
-    key: "walkingLimit",
-    title: "하루에 어느 정도 걸어도 괜찮나요?",
-    type: "single",
-    choices: [
-      { value: "under-5k", label: "5천 보 이하", helper: "차량/대중교통 중심" },
-      { value: "under-10k", label: "1만 보 이하", helper: "가벼운 산책 가능" },
-      { value: "no-limit", label: "1만 보 이상도 괜찮음", helper: "골목과 자연 산책도 좋아요" }
-    ]
-  },
-  {
     key: "include",
     title: "꼭 포함하고 싶은 것은?",
     type: "multi",
+    layout: "chips",
     choices: ["카페", "맛집", "사진", "전시", "쇼핑", "자연", "바다", "로컬", "휴식"].map((item) => ({ value: item, label: item }))
   },
   {
     key: "avoid",
     title: "피하고 싶은 것은?",
     type: "multi",
+    layout: "chips",
     choices: ["혼잡", "긴 이동", "비싼 식당", "관광지", "야외 위주"].map((item) => ({ value: item, label: item }))
   }
 ];
 
 const defaults: SurveyAnswers = {
-  travelWindow: "이번 봄",
+  travelWindow: "",
   tripLength: "2n3d",
   regionPreference: "anywhere",
   travelRange: "short-flight",
@@ -137,8 +121,8 @@ const defaults: SurveyAnswers = {
   companions: "partner",
   pace: "balanced",
   walkingLimit: "under-10k",
-  include: ["바다", "카페", "사진"],
-  avoid: ["혼잡"]
+  include: [],
+  avoid: []
 };
 
 const analysisStatusCopy: Record<SurveyFlowProps["profileStatus"], { title: string; detail: string }> = {
@@ -182,6 +166,7 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
     onComplete({
       ...answers,
       instagramUrl,
+      travelWindow: answers.travelWindow || "미정",
       destinationPreference: "recommend",
       tripLength: answers.tripLength as TripLength,
       regionPreference: answers.regionPreference as TravelRegionPreference,
@@ -244,7 +229,7 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
           ) : null}
 
           {question.type !== "text" ? (
-            <div className="grid gap-2">
+            <div className={question.layout === "chips" ? "flex flex-wrap gap-2" : "grid gap-2"}>
               {question.choices?.map((choice) => {
                 const isSelected = selectedValues.includes(choice.value);
                 return (
@@ -252,9 +237,13 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
                     key={choice.value}
                     type="button"
                     onClick={() => (question.type === "multi" ? toggleAnswer(choice.value) : setAnswer(choice.value))}
-                    className={`grid gap-1 rounded-xl border p-4 text-left transition ${
-                      isSelected ? "border-cyan-800 bg-cyan-50 text-cyan-900" : "border-line bg-white text-ink"
-                    }`}
+                    className={question.layout === "chips"
+                      ? `h-10 rounded-full border px-4 text-[13px] font-extrabold transition ${
+                          isSelected ? "border-cyan-800 bg-cyan-50 text-cyan-900" : "border-line bg-white text-ink"
+                        }`
+                      : `grid gap-1 rounded-xl border p-4 text-left transition ${
+                          isSelected ? "border-cyan-800 bg-cyan-50 text-cyan-900" : "border-line bg-white text-ink"
+                        }`}
                   >
                     <span className="text-[15px] font-extrabold">{choice.label}</span>
                     {choice.helper ? <span className="text-[12px] leading-4 text-muted">{choice.helper}</span> : null}
