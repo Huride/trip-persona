@@ -2,7 +2,8 @@
 
 import { ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
 import { useState } from "react";
-import type { TripPersonaResult } from "@/src/lib/types";
+import { toProxiedImageUrl } from "@/src/lib/imageProxy";
+import type { ProfileEvidenceImage, TripPersonaResult } from "@/src/lib/types";
 
 interface PersonaRevealProps {
   result: TripPersonaResult;
@@ -12,7 +13,11 @@ interface PersonaRevealProps {
 
 export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealProps) {
   const insightCards = buildInsightCards(result);
+  const tasteTags = result.persona.tasteTags.slice(0, 5);
+  const [activeTag, setActiveTag] = useState(tasteTags[0] ?? "");
   const [isReasonOpen, setIsReasonOpen] = useState(false);
+  const selectedTag = tasteTags.includes(activeTag) ? activeTag : tasteTags[0];
+  const visibleImages = getImagesForTag(result.profileImages ?? [], selectedTag);
 
   return (
     <main className="min-h-screen bg-mist px-5 py-6 text-ink">
@@ -29,54 +34,79 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
             <h2 className="text-[18px] font-extrabold">인스타에서 읽은 취향</h2>
             {result.profileUsername ? <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-cyan-900">@{result.profileUsername}</span> : null}
           </div>
-          {result.profileImages && result.profileImages.length > 0 ? (
+
+          {tasteTags.length > 0 ? (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {result.profileImages.map((image) => (
-                <figure key={image.url} className="w-28 shrink-0 overflow-hidden rounded-xl border border-white bg-white shadow-sm">
-                  <img src={image.url} alt={image.alt} className="aspect-square w-full object-cover" />
-                  <figcaption className="px-2 py-1 text-[10px] font-bold text-muted">{image.source}</figcaption>
+              {tasteTags.map((tag) => {
+                const isActive = selectedTag === tag;
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setActiveTag(tag)}
+                    className={`h-10 shrink-0 rounded-full border px-4 text-[13px] font-extrabold transition ${
+                      isActive ? "border-cyan-800 bg-white text-cyan-900 shadow-sm" : "border-cyan-200 bg-cyan-50 text-cyan-800"
+                    }`}
+                  >
+                    {labelPersonaTag(tag)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {visibleImages.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-xl bg-white p-2">
+              {visibleImages.map((image) => (
+                <figure key={`${selectedTag}-${image.url}`} className="overflow-hidden rounded-lg bg-cyan-50">
+                  <img src={toProxiedImageUrl(image.url)} alt={image.alt} className="aspect-square w-full object-cover" loading="lazy" />
                 </figure>
               ))}
             </div>
           ) : null}
-          <div className="grid gap-2">
-            {(result.profileEvidence ?? ["프로필의 장소, 분위기, 활동 신호를 여행 조건과 함께 분석했습니다."]).map((note) => (
-              <p key={note} className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{note}</p>
-            ))}
-          </div>
+
           <button
             type="button"
             onClick={() => setIsReasonOpen((current) => !current)}
             className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-white px-3 text-[13px] font-extrabold text-cyan-900"
           >
-            상세 추천 사유 보기
+            상세 설명 확인하기
             <ArrowDown aria-hidden="true" size={15} className={`transition ${isReasonOpen ? "rotate-180" : ""}`} />
           </button>
           {isReasonOpen ? (
-            <p className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{result.persona.summary}</p>
+            <div className="grid gap-2">
+              <p className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{result.persona.summary}</p>
+              {(result.profileEvidence ?? ["프로필의 장소, 분위기, 활동 신호를 여행 조건과 함께 분석했습니다."]).map((note) => (
+                <p key={note} className="rounded-xl bg-white p-3 text-[13px] font-bold leading-5 text-cyan-950">{note}</p>
+              ))}
+            </div>
           ) : null}
         </article>
 
-        <div className="grid gap-3">
-          {insightCards.map((card) => (
-            <article key={card.label} className="grid gap-2 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-              <p className="text-[12px] font-extrabold text-cyan-800">{card.label}</p>
-              <h2 className="text-[18px] font-extrabold leading-6">{card.title}</h2>
-              <p className="text-[13px] leading-5 text-muted">{card.description}</p>
-            </article>
-          ))}
-        </div>
+        {isReasonOpen ? (
+          <>
+            <div className="grid gap-3">
+              {insightCards.map((card) => (
+                <article key={card.label} className="grid gap-2 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+                  <p className="text-[12px] font-extrabold text-cyan-800">{card.label}</p>
+                  <h2 className="text-[18px] font-extrabold leading-6">{card.title}</h2>
+                  <p className="text-[13px] leading-5 text-muted">{card.description}</p>
+                </article>
+              ))}
+            </div>
 
-        <article className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-          <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
-          <div className="flex flex-wrap gap-2">
-            {result.persona.tasteTags.map((tag) => (
-              <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag)}</span>
-            ))}
-          </div>
-          <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
-          <PersonaMetric label="혼잡 회피 성향" value={result.persona.crowdTolerance === "low" ? 78 : result.persona.crowdTolerance === "medium" ? 52 : 28} />
-        </article>
+            <article className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+              <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
+              <div className="flex flex-wrap gap-2">
+                {result.persona.tasteTags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag)}</span>
+                ))}
+              </div>
+              <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
+              <PersonaMetric label="혼잡 회피 성향" value={result.persona.crowdTolerance === "low" ? 78 : result.persona.crowdTolerance === "medium" ? 52 : 28} />
+            </article>
+          </>
+        ) : null}
 
         <div className="grid gap-2">
           <button onClick={onContinue} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
@@ -91,6 +121,30 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
       </section>
     </main>
   );
+}
+
+function getImagesForTag(images: ProfileEvidenceImage[], tag?: string): ProfileEvidenceImage[] {
+  if (!tag || images.length === 0) return images;
+  const matched = images.filter((image) => imageMatchesTag(image, tag));
+  const rest = images.filter((image) => !matched.some((item) => item.url === image.url));
+  return [...matched, ...rest].slice(0, 6);
+}
+
+function imageMatchesTag(image: ProfileEvidenceImage, tag: string): boolean {
+  const text = `${image.alt} ${image.source}`.toLowerCase();
+  if (["specialty-coffee", "cafe-hopping", "trendy-cafes", "cafes"].includes(tag)) {
+    return /cafe|coffee|카페|커피|앤트러사이트|서교/.test(text);
+  }
+  if (["local-neighborhood", "urban-exploration", "city", "urban", "walk", "local"].includes(tag)) {
+    return /서울|당산|서교|local|city|street|neighborhood|in\s/.test(text);
+  }
+  if (["coastal", "ocean", "beach"].includes(tag)) {
+    return /sea|ocean|beach|바다|해변|island/.test(text);
+  }
+  if (["food", "local-food"].includes(tag)) {
+    return /food|restaurant|cafe|맛|식당|카페|market/.test(text);
+  }
+  return true;
 }
 
 function buildInsightCards(result: TripPersonaResult) {
