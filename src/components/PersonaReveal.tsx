@@ -71,7 +71,7 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
           <h2 className="text-[18px] font-extrabold">분석에 사용한 신호</h2>
           <div className="flex flex-wrap gap-2">
             {result.persona.tasteTags.map((tag) => (
-              <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{tag}</span>
+              <span key={tag} className="rounded-full bg-cyan-50 px-3 py-2 text-[12px] font-bold text-cyan-900">{labelPersonaTag(tag)}</span>
             ))}
           </div>
           <PersonaMetric label="느린 일정 선호" value={result.persona.pace === "slow" ? 86 : result.persona.pace === "balanced" ? 64 : 38} />
@@ -99,7 +99,9 @@ function buildInsightCards(result: TripPersonaResult) {
     ? "바다와 여유가 있는 장면"
     : tags.includes("food") || tags.includes("local-food")
       ? "로컬 미식과 활기 있는 거리"
-      : tags.includes("gallery") || tags.includes("design") || tags.includes("art")
+      : tags.includes("specialty-coffee") || tags.includes("cafe-hopping") || tags.includes("minimalist-aesthetic") || tags.includes("local-neighborhood")
+        ? "조용한 카페와 감도 높은 동네"
+        : tags.includes("gallery") || tags.includes("design") || tags.includes("art")
         ? "전시, 디자인, 감도 높은 동네"
         : "카페와 산책이 섞인 도시 취향";
   const paceLabel = result.persona.pace === "slow" ? "하루 2-3곳을 깊게 보는 일정" : result.persona.pace === "packed" ? "하루 5곳 이상 촘촘한 일정" : "대표 코스와 여유를 섞는 일정";
@@ -112,6 +114,45 @@ function buildInsightCards(result: TripPersonaResult) {
     { label: "혼잡 민감도", title: crowdLabel, description: "추천지의 시간대와 Plan B를 고를 때 이 기준을 반영합니다." },
     { label: "추천 근거", title: evidence, description: "아래 추천 여행지는 이 분석 결과와 이동 가능 범위를 함께 적용해 정렬됩니다." }
   ];
+}
+
+function labelPersonaTag(tag: string): string {
+  const labels: Record<string, string> = {
+    food: "미식",
+    "local-food": "로컬 미식",
+    city: "도시 산책",
+    urban: "도시 감도",
+    night: "야간 무드",
+    packed: "고밀도 일정",
+    coastal: "바다",
+    ocean: "오션뷰",
+    beach: "해변",
+    slow: "느린 여행",
+    rest: "휴식",
+    photo: "사진",
+    design: "디자인",
+    gallery: "전시",
+    cafes: "카페",
+    shopping: "쇼핑",
+    quiet: "조용한 동네",
+    local: "로컬",
+    walk: "산책",
+    retro: "레트로",
+    "cafe-hopping": "카페 탐방",
+    minimalism: "미니멀한 공간",
+    "urban-exploration": "도시 탐색",
+    "quiet-places": "조용한 장소",
+    "aesthetic-spaces": "감도 높은 공간",
+    "hands-on-workshops": "체험형 활동",
+    "instagrammable-spots": "사진 명소",
+    "eco-tourism": "친환경 여행",
+    "trendy-cafes": "트렌디한 카페",
+    "specialty-coffee": "스페셜티 커피",
+    "minimalist-aesthetic": "미니멀한 미감",
+    "local-neighborhood": "로컬 동네"
+  };
+
+  return labels[tag] ?? tag;
 }
 
 function PersonaMetric({ label, value }: { label: string; value: number }) {

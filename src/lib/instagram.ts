@@ -3,6 +3,13 @@ import { selectFallbackSampleId } from "./profileAnalysis";
 import { sampleProfiles } from "./sampleProfiles";
 import type { ProfileEvidenceImage } from "./types";
 
+interface RawInstagramImage {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
 export interface InstagramProfileContent {
   source: "live" | "sample" | "pasted";
   username: string;
@@ -26,20 +33,33 @@ export async function ingestInstagramProfile(instagramUrl: string): Promise<Inst
     };
   }
 
+  let seoProfile: InstagramProfileContent | null = null;
   try {
-    const seoProfile = await fetchInstagramSeoProfile(instagramUrl);
-    if (seoProfile) return seoProfile;
+    seoProfile = await fetchInstagramSeoProfile(instagramUrl);
   } catch {
-    // Continue to the browser attempt below.
+    seoProfile = null;
   }
 
   try {
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.goto(instagramUrl, { waitUntil: "domcontentloaded", timeout: 12000 });
-    await page.waitForTimeout(2500);
-    const text = await page.locator("body").innerText({ timeout: 3000 });
-    await browser.close();
+    const domProfile = await fetchInstagramDomProfile(instagramUrl, seoProfile?.username ?? extractUsername(instagramUrl));
+    if (domProfile) {
+      if (seoProfile) {
+        return {
+          ...seoProfile,
+          profileText: [seoProfile.profileText, domProfile.profileText].filter(Boolean).join("\n"),
+          profileImages: domProfile.profileImages && domProfile.profileImages.length > 0 ? domProfile.profileImages : seoProfile.profileImages
+        };
+      }
+      return domProfile;
+    }
+  } catch {
+    // Continue to SEO fallback below.
+  }
+
+  if (seoProfile) return seoProfile;
+
+  try {
+    const text = await fetchInstagramBodyText(instagramUrl);
     if (!isUsableProfileText(text)) {
       throw new Error("Instagram profile text was not usable");
     }
@@ -102,6 +122,28 @@ export function parseInstagramSeoHtml(html: string, instagramUrl: string): Insta
   };
 }
 
+export function selectInstagramFeedImages(rawImages: RawInstagramImage[], username: string): ProfileEvidenceImage[] {
+  const seen = new Set<string>();
+  return rawImages
+    .filter((image) => {
+      const alt = image.alt.toLowerCase();
+      if (!image.src) return false;
+      if (alt.includes("profile picture")) return false;
+      if (alt.includes(`${username.toLowerCase()}'s profile`)) return false;
+      if (!/^photo by/i.test(image.alt)) return false;
+      if (image.width < 180 || image.height < 180) return false;
+      if (seen.has(image.src)) return false;
+      seen.add(image.src);
+      return true;
+    })
+    .slice(0, 6)
+    .map((image) => ({
+      url: image.src,
+      alt: image.alt,
+      source: "Instagram feed"
+    }));
+}
+
 function extractUsername(url: string): string {
   try {
     const parsed = new URL(url);
@@ -122,6 +164,57 @@ async function fetchInstagramSeoProfile(instagramUrl: string): Promise<Instagram
   if (!response.ok) return null;
   const html = await response.text();
   return parseInstagramSeoHtml(html, instagramUrl);
+}
+
+async function fetchInstagramDomProfile(instagramUrl: string, username: string): Promise<InstagramProfileContent | null> {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 1200 },
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    });
+    await page.goto(instagramUrl, { waitUntil: "domcontentloaded", timeout: 12000 });
+    await page.waitForTimeout(4500);
+    const data = await page.evaluate(() => ({
+      text: document.body.innerText,
+      images: [...document.images].map((image) => ({
+        src: image.currentSrc || image.src,
+        alt: image.alt,
+        width: image.naturalWidth,
+        height: image.naturalHeight
+      }))
+    }));
+    const feedImages = selectInstagramFeedImages(data.images, username);
+    if (feedImages.length === 0 && !isUsableProfileText(data.text)) return null;
+
+    const feedText = [
+      isUsableProfileText(data.text) ? data.text.slice(0, 4000) : "",
+      ...feedImages.map((image, index) => `feed image ${index + 1}: ${image.alt}`)
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return {
+      source: "live",
+      username,
+      profileText: feedText,
+      profileImages: feedImages
+    };
+  } finally {
+    await browser.close();
+  }
+}
+
+async function fetchInstagramBodyText(instagramUrl: string): Promise<string> {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(instagramUrl, { waitUntil: "domcontentloaded", timeout: 12000 });
+    await page.waitForTimeout(2500);
+    return await page.locator("body").innerText({ timeout: 3000 });
+  } finally {
+    await browser.close();
+  }
 }
 
 function readMetaContent(html: string, property: string): string | null {

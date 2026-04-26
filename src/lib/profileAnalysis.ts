@@ -32,13 +32,22 @@ const templates: PersonaTemplate[] = [
     keywords: ["ocean", "sea", "beach", "바다", "island", "resort", "snorkeling", "sunset", "healing", "휴식"]
   },
   {
+    title: "감성적인 로컬 카페 산책가",
+    summary: "조용한 동네의 카페와 미니멀한 공간을 오래 머무르며 즐기는 여행자입니다.",
+    tasteTags: ["specialty-coffee", "minimalist-aesthetic", "local-neighborhood", "cafe-hopping", "urban-exploration"],
+    pace: "slow",
+    crowdTolerance: "low",
+    confidenceNotes: ["keyword analysis: cafe-local"],
+    keywords: ["cafe", "coffee", "카페", "커피", "앤트러사이트", "서교점", "당산동", "minimal", "sketch", "drawing", "조용"]
+  },
+  {
     title: "감도 높은 문화 탐색가",
     summary: "도시의 디자인, 전시, 편집숍, 카페를 촘촘히 탐색하는 여행자입니다.",
     tasteTags: ["design", "gallery", "cafes", "shopping", "urban"],
     pace: "balanced",
     crowdTolerance: "medium",
     confidenceNotes: ["keyword analysis: design-city"],
-    keywords: ["design", "gallery", "museum", "전시", "art", "bookstore", "shopping", "brand", "cafe", "coffee"]
+    keywords: ["design", "gallery", "museum", "전시", "art", "bookstore", "shopping", "brand", "cafe", "coffee", "카페", "앤트러사이트", "서교점"]
   },
   {
     title: "조용한 로컬 산책가",
@@ -71,7 +80,12 @@ export function analyzeProfileText(profileText: string, username = "instagram"):
   }
 
   const fallbackId = selectFallbackSampleId(username || profileText);
-  const fallback = templates[fallbackId === "food-city" ? 0 : fallbackId === "ocean-nature" ? 1 : 2];
+  const fallbackById: Record<ReturnType<typeof selectFallbackSampleId>, PersonaTemplate> = {
+    "cafe-gallery": templates[3],
+    "food-city": templates[1],
+    "ocean-nature": templates[2]
+  };
+  const fallback = fallbackById[fallbackId];
   return {
     title: fallback.title,
     summary: fallback.summary,
@@ -126,7 +140,19 @@ function labelTasteTag(tag: string): string {
     quiet: "조용한 동네",
     local: "로컬",
     walk: "산책",
-    retro: "레트로"
+    retro: "레트로",
+    "cafe-hopping": "카페 탐방",
+    minimalism: "미니멀한 공간",
+    "urban-exploration": "도시 탐색",
+    "quiet-places": "조용한 장소",
+    "aesthetic-spaces": "감도 높은 공간",
+    "hands-on-workshops": "체험형 활동",
+    "instagrammable-spots": "사진 명소",
+    "eco-tourism": "친환경 여행",
+    "trendy-cafes": "트렌디한 카페",
+    "specialty-coffee": "스페셜티 커피",
+    "minimalist-aesthetic": "미니멀한 미감",
+    "local-neighborhood": "로컬 동네"
   };
 
   return labels[tag] ?? tag;
