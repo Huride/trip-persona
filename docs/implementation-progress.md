@@ -15,6 +15,7 @@ Implemented:
 - `/api/analyze` endpoint that combines ingestion, persona analysis, ranking, concepts, and itinerary.
 - Mobile staged workflow for profile entry, analysis survey, finalizing, persona reveal, and destination recommendations.
 - Profile analysis now starts immediately after the Instagram link is submitted, while the survey continues in parallel.
+- Survey can be skipped; skipped runs send `surveySkipped` and rank destinations from Instagram persona signals instead of survey defaults.
 - Survey now asks domestic/overseas preference and acceptable travel range.
 - Destination-specific recommendation plans with photo, transport, stays, restaurants, photo spots, and day-by-day itinerary without repeating the same stop within a day.
 - Persona reveal now explains Instagram-derived profile evidence, atmosphere, pace, crowd sensitivity, and recommendation evidence instead of showing ambiguous floating tags.
@@ -23,10 +24,11 @@ Implemented:
 - Demo script for reliable judging runs.
 
 Verification:
-- `npm test`: 6 files, 16 tests passed.
+- `npm test`: 6 files, 17 tests passed.
 - `npm run build`: production build passed.
 - API smoke: `profile-analysis` starts first, then `/api/analyze` combines profile analysis with survey answers; 3박 4일 produces 4 daily plans.
 - Browser smoke: mobile sample submission completes entry, survey, persona reveal, and recommendations without horizontal overflow.
+- Browser smoke: mobile survey-skip path reaches recommendations without horizontal overflow.
 - Gemini key check: 9 configured keys checked; 3 usable. Usable keys were promoted to `GEMINI_API_KEY`, `GEMINI_API_KEY_1`, and `GEMINI_API_KEY_2`; expired/leaked keys were removed from local env files.
 - Instagram crawler check: public Instagram profile returned a login wall in this environment; app falls back to deterministic sample analysis.
 

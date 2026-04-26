@@ -62,6 +62,7 @@ export interface TripSurvey {
   walkingLimit: WalkingLimit;
   include: string[];
   avoid: string[];
+  surveySkipped?: boolean;
 }
 
 export interface Place {

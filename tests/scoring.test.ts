@@ -47,4 +47,27 @@ describe("rankDestinations", () => {
     const result = rankDestinations(persona, { ...survey, regionPreference: "overseas", travelRange: "short-flight" });
     expect(["seoul", "jeju", "busan", "mokpo", "namhae"]).not.toContain(result[0].destinationId);
   });
+
+  it("uses Instagram persona signals over survey defaults when the survey is skipped", () => {
+    const designPersona: TravelPersona = {
+      title: "Design City Culture Seeker",
+      summary: "Likes dense design city trips.",
+      tasteTags: ["design", "gallery", "cafes", "shopping", "urban"],
+      pace: "packed",
+      crowdTolerance: "medium",
+      confidenceNotes: ["profile analysis"]
+    };
+
+    const result = rankDestinations(designPersona, {
+      ...survey,
+      surveySkipped: true,
+      regionPreference: "domestic",
+      travelRange: "nearby",
+      include: ["바다", "휴식"],
+      pace: "slow"
+    });
+
+    expect(["tokyo", "seoul", "singapore", "kyoto"]).toContain(result[0].destinationId);
+    expect(result[0].reason).toContain("설문을 건너뛰어");
+  });
 });

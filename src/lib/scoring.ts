@@ -48,20 +48,20 @@ const destinationTravelRange: Record<DestinationId, Exclude<TravelRange, "anywhe
 
 export function rankDestinations(persona: TravelPersona, survey: TripSurvey): DestinationRecommendation[] {
   const explicit = survey.destinationPreference !== "recommend" ? survey.destinationPreference : null;
+  const surveyTags = survey.surveySkipped ? [] : [survey.pace, ...survey.include.flatMap((item) => surveyKeywordMap[item] ?? [])];
   const desiredTags = new Set<string>([
     ...persona.tasteTags,
-    survey.pace,
-    ...survey.include.flatMap((item) => surveyKeywordMap[item] ?? [])
+    ...surveyTags
   ]);
 
   const ranked = destinations.map((destination) => {
     const matches = destination.personalityTags.filter((tag) => desiredTags.has(tag));
     const explicitBoost = explicit === destination.id ? 100 : 0;
-    const travelScore = scoreTravelCondition(destination, survey);
+    const travelScore = survey.surveySkipped ? 0 : scoreTravelCondition(destination, survey);
     const fitScore = Math.max(0, Math.min(100, explicitBoost + 44 + matches.length * 9 + travelScore));
     const reason = matches.length
       ? `${matches.join(", ")} 취향 신호와 잘 맞고, ${describeTravelFit(destination, survey)}`
-      : `명시 조건과 기본 여행 성향을 기준으로 무난하며, ${describeTravelFit(destination, survey)}`;
+      : `인스타 프로필 성향을 기준으로 무난하며, ${describeTravelFit(destination, survey)}`;
     const tradeOff = destination.personalityTags.includes("urban")
       ? "도시형 여행지는 혼잡도가 높을 수 있습니다."
       : "자연형 여행지는 이동 시간이 길어질 수 있습니다.";
@@ -101,6 +101,8 @@ function scoreTravelCondition(destination: Destination, survey: TripSurvey): num
 }
 
 function describeTravelFit(destination: Destination, survey: TripSurvey): string {
+  if (survey.surveySkipped) return "설문을 건너뛰어 인스타 취향 분석을 우선 반영했습니다.";
+
   const isDomestic = domesticIds.has(destination.id);
   const regionLabel = isDomestic ? "국내 이동 조건" : "해외 이동 조건";
   const range = destinationTravelRange[destination.id];

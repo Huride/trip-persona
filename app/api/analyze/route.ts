@@ -68,6 +68,7 @@ const surveySchema = z.object({
   walkingLimit: z.enum(["under-5k", "under-10k", "no-limit"]),
   include: z.array(z.string()),
   avoid: z.array(z.string()),
+  surveySkipped: z.boolean().optional(),
   profileAnalysis: profileAnalysisSchema.optional()
 });
 

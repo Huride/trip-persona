@@ -192,6 +192,24 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
     });
   }
 
+  function skipSurvey() {
+    onComplete({
+      instagramUrl,
+      travelWindow: "미정",
+      tripLength: "2n3d",
+      destinationPreference: "recommend",
+      regionPreference: "anywhere",
+      travelRange: "anywhere",
+      budget: "300k-700k",
+      companions: "solo",
+      pace: "balanced",
+      walkingLimit: "under-10k",
+      include: [],
+      avoid: [],
+      surveySkipped: true
+    });
+  }
+
   return (
     <main className="min-h-screen bg-mist px-5 py-5 text-ink">
       <section className="mx-auto grid w-full max-w-md gap-4">
@@ -247,10 +265,15 @@ export function SurveyFlow({ instagramUrl, profileStatus, onComplete }: SurveyFl
           ) : null}
         </article>
 
-        <button onClick={goNext} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
-          {step === questions.length - 1 ? "결과 만들기" : "다음"}
-          <ArrowRight aria-hidden="true" size={18} />
-        </button>
+        <div className="grid gap-2">
+          <button onClick={goNext} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
+            {step === questions.length - 1 ? "결과 만들기" : "다음"}
+            <ArrowRight aria-hidden="true" size={18} />
+          </button>
+          <button onClick={skipSurvey} className="inline-flex h-11 items-center justify-center rounded-lg border border-cyan-200 bg-white px-4 text-[14px] font-extrabold text-cyan-900">
+            설문 건너뛰고 인스타 분석만으로 추천받기
+          </button>
+        </div>
       </section>
     </main>
   );
