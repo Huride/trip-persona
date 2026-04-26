@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type Part } from "@google/genai";
 
 const GEMINI_MODEL = "gemini-3-flash-preview";
 
@@ -29,12 +29,16 @@ export function getGeminiClient() {
 }
 
 export async function generateJson<T>(prompt: string, fallback: T): Promise<T> {
+  return generateJsonFromParts([{ text: prompt }], fallback);
+}
+
+export async function generateJsonFromParts<T>(parts: Part[], fallback: T): Promise<T> {
   for (const apiKey of getGeminiApiKeys()) {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: GEMINI_MODEL,
-        contents: prompt,
+        contents: parts,
         config: {
           responseMimeType: "application/json"
         }

@@ -49,10 +49,10 @@ const destinationTravelRange: Record<DestinationId, Exclude<TravelRange, "anywhe
 export function rankDestinations(persona: TravelPersona, survey: TripSurvey): DestinationRecommendation[] {
   const explicit = survey.destinationPreference !== "recommend" ? survey.destinationPreference : null;
   const surveyTags = survey.surveySkipped ? [] : [survey.pace, ...survey.include.flatMap((item) => surveyKeywordMap[item] ?? [])];
-  const desiredTags = new Set<string>([
+  const desiredTags = new Set(expandRecommendationTags([
     ...persona.tasteTags,
     ...surveyTags
-  ]);
+  ]));
 
   const ranked = destinations.map((destination) => {
     const matches = destination.personalityTags.filter((tag) => desiredTags.has(tag));
@@ -76,6 +76,27 @@ export function rankDestinations(persona: TravelPersona, survey: TripSurvey): De
   });
 
   return ranked.sort((a, b) => b.fitScore - a.fitScore).slice(0, 3);
+}
+
+function expandRecommendationTags(tags: string[]): string[] {
+  const aliases: Record<string, string[]> = {
+    "social-gathering": ["social-gathering", "social-gatherings", "energy", "city", "urban", "photo"],
+    "social-gatherings": ["social-gatherings", "social-gathering", "energy", "city", "urban", "photo"],
+    "social-travel": ["social-travel", "energy", "city", "shopping", "photo"],
+    "social-oriented": ["social-oriented", "energy", "city", "urban", "photo"],
+    "trendy-spots": ["trendy-spots", "trendy", "urban", "design", "shopping", "photo"],
+    "photo-worthy": ["photo-worthy", "photo", "design", "urban"],
+    "photo-spots": ["photo-spots", "photo", "design", "urban"],
+    instagrammable: ["instagrammable", "photo", "trendy", "design"],
+    photography: ["photography", "photo", "design"],
+    "active-lifestyle": ["active-lifestyle", "energy", "city", "dense"],
+    "active-experience": ["active-experience", "energy", "city", "dense"],
+    "activity-focused": ["activity-focused", "energy", "city", "dense"],
+    nightlife: ["nightlife", "night", "energy", "city"],
+    "city-tour": ["city-tour", "city", "urban", "walk"]
+  };
+
+  return tags.flatMap((tag) => aliases[tag] ?? [tag]);
 }
 
 function scoreTravelCondition(destination: Destination, survey: TripSurvey): number {

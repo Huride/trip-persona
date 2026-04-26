@@ -22,7 +22,19 @@ const profileAnalysisSchema = z.object({
   source: z.enum(["live", "sample", "pasted"]),
   username: z.string(),
   profileEvidence: z.array(z.string()),
-  profileImages: z.array(z.object({ url: z.string(), alt: z.string(), source: z.string(), tags: z.array(z.string()).optional() })).optional()
+  profileImages: z.array(z.object({
+    url: z.string(),
+    alt: z.string(),
+    source: z.string(),
+    tags: z.array(z.string()).optional(),
+    visualDescription: z.string().optional(),
+    visualTags: z.array(z.string()).optional(),
+    visualMood: z.array(z.string()).optional(),
+    visualPlace: z.array(z.string()).optional(),
+    visualActivities: z.array(z.string()).optional(),
+    analysisSource: z.enum(["vision", "metadata"]).optional(),
+    analysisConfidence: z.number().optional()
+  })).optional()
 });
 
 const surveySchema = z.object({

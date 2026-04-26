@@ -70,4 +70,24 @@ describe("rankDestinations", () => {
     expect(["tokyo", "seoul", "singapore", "kyoto"]).toContain(result[0].destinationId);
     expect(result[0].reason).toContain("설문을 건너뛰어");
   });
+
+  it("maps vision-derived social and trendy tags into destination ranking aliases", () => {
+    const socialPersona: TravelPersona = {
+      title: "트렌디 시티 투어러",
+      summary: "친구들과 사진 명소와 핫플을 즐깁니다.",
+      tasteTags: ["social-gathering", "trendy-spots", "photo-worthy", "city-tour"],
+      pace: "balanced",
+      crowdTolerance: "medium",
+      confidenceNotes: ["vision analysis"]
+    };
+
+    const result = rankDestinations(socialPersona, {
+      ...survey,
+      surveySkipped: true,
+      include: [],
+      avoid: []
+    });
+
+    expect(["seoul", "tokyo", "osaka", "singapore", "hongkong"]).toContain(result[0].destinationId);
+  });
 });

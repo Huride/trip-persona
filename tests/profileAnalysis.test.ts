@@ -44,6 +44,11 @@ describe("selectFallbackSampleId", () => {
 
     expect(new Set(ids).size).toBeGreaterThan(1);
   });
+
+  it("keeps deterministic fallback ids mapped to the right persona templates", () => {
+    expect(analyzeProfileText("unreadable profile text", "aa").tasteTags).toContain("food");
+    expect(analyzeProfileText("unreadable profile text", "ac").tasteTags).toContain("ocean");
+  });
 });
 
 describe("buildProfileEvidence", () => {

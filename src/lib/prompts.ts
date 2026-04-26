@@ -13,6 +13,7 @@ title, summary, tasteTags, tasteTagLabels, pace, crowdTolerance, confidenceNotes
 Rules:
 - title and summary must be written in Korean.
 - summary should be 2-3 concise Korean sentences explaining the recommendation rationale.
+- If Gemini vision analysis lines are present, combine them with profile metadata and treat visible image signals as direct evidence.
 - tasteTags must be lowercase English slugs.
 - tasteTagLabels must be an object whose keys are exactly the tasteTags and whose values are short Korean labels for UI chips.
 `.trim();

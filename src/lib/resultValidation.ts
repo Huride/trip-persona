@@ -115,7 +115,18 @@ function localizeTasteTag(tag: string): string {
     "active-vibes": "활기찬 분위기",
     "active-experience": "활기찬 체험",
     "pop-up-stores": "팝업 스토어",
-    "collaboration-centric": "함께 즐기는 경험"
+    "collaboration-centric": "함께 즐기는 경험",
+    "social-oriented": "함께하는 여행",
+    "active-lifestyle": "에너제틱 활동",
+    "photo-spots": "인생샷 스팟",
+    nightlife: "야간 무드",
+    shopping: "쇼핑",
+    nature: "자연",
+    quiet: "조용한 장소",
+    design: "디자인",
+    gallery: "전시",
+    coastal: "바다",
+    rest: "휴식"
   };
   return labels[tag] ?? tag.split("-").filter(Boolean).map((word) => labels[word] ?? word).join(" ");
 }

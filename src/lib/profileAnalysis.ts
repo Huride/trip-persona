@@ -1,10 +1,12 @@
 import type { InstagramProfileContent } from "./instagram";
 import type { TravelPersona } from "./types";
 
-type PersonaTemplate = TravelPersona & { keywords: string[] };
+type PersonaTemplateId = "travel-destination" | "social-trend" | "food-city" | "ocean-nature" | "cafe-gallery" | "design-city" | "quiet-local";
+type PersonaTemplate = TravelPersona & { id: PersonaTemplateId; keywords: string[] };
 
 const templates: PersonaTemplate[] = [
   {
+    id: "travel-destination",
     title: "비주얼 여행지 수집가",
     summary: "멋진 여행지와 사진이 잘 나오는 장면을 모아보는 여행자입니다.",
     tasteTags: ["photo", "nature", "coastal", "city", "travel"],
@@ -14,6 +16,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["travel", "trip", "destination", "destinations", "wanderlust", "journey", "explore", "hotel", "resort", "여행"]
   },
   {
+    id: "social-trend",
     title: "트렌디한 소셜 장면 수집가",
     summary: "사람들과 함께 만드는 활기 있는 장면과 사진으로 남기기 좋은 트렌디한 장소를 선호하는 여행자입니다.",
     tasteTags: ["social-gathering", "trendy-spots", "photo-worthy", "activity-focused", "city-tour"],
@@ -23,6 +26,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["instagram update", "collab", "social", "sns", "trend", "trendy", "pop-up", "stage", "nmixx", "billlie", "wooah", "wjsn", "chuu", "tsuki", "nana", "dayoung", "yves", "함께"]
   },
   {
+    id: "food-city",
     title: "도시 미식 탐험가",
     summary: "로컬 미식과 도시 에너지를 짧고 밀도 있게 즐기는 여행자입니다.",
     tasteTags: ["food", "local-food", "city", "night", "packed"],
@@ -32,6 +36,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["food", "맛집", "restaurant", "dining", "night", "market", "izakaya", "bar", "street food", "야시장"]
   },
   {
+    id: "ocean-nature",
     title: "바다 휴식 여행자",
     summary: "바다와 휴식, 낮은 이동 강도를 선호하는 여행자입니다.",
     tasteTags: ["coastal", "ocean", "slow", "rest", "photo"],
@@ -41,6 +46,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["ocean", "sea", "beach", "바다", "island", "resort", "snorkeling", "sunset", "healing", "휴식"]
   },
   {
+    id: "cafe-gallery",
     title: "감성적인 로컬 카페 산책가",
     summary: "조용한 동네의 카페와 미니멀한 공간을 오래 머무르며 즐기는 여행자입니다.",
     tasteTags: ["specialty-coffee", "minimalist-aesthetic", "local-neighborhood", "cafe-hopping", "urban-exploration"],
@@ -50,6 +56,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["cafe", "coffee", "카페", "커피", "앤트러사이트", "서교점", "당산동", "minimal", "sketch", "drawing", "조용"]
   },
   {
+    id: "design-city",
     title: "감도 높은 문화 탐색가",
     summary: "도시의 디자인, 전시, 편집숍, 카페를 촘촘히 탐색하는 여행자입니다.",
     tasteTags: ["design", "gallery", "cafes", "shopping", "urban"],
@@ -59,6 +66,7 @@ const templates: PersonaTemplate[] = [
     keywords: ["design", "gallery", "museum", "전시", "art", "bookstore", "shopping", "brand", "cafe", "coffee", "카페", "앤트러사이트", "서교점"]
   },
   {
+    id: "quiet-local",
     title: "조용한 로컬 산책가",
     summary: "유명 관광지보다 조용한 동네, 로컬 산책, 작은 식당을 선호하는 여행자입니다.",
     tasteTags: ["quiet", "local", "slow", "walk", "retro"],
@@ -89,12 +97,7 @@ export function analyzeProfileText(profileText: string, username = "instagram"):
   }
 
   const fallbackId = selectFallbackSampleId(username || profileText);
-  const fallbackById: Record<ReturnType<typeof selectFallbackSampleId>, PersonaTemplate> = {
-    "cafe-gallery": templates[3],
-    "food-city": templates[1],
-    "ocean-nature": templates[2]
-  };
-  const fallback = fallbackById[fallbackId];
+  const fallback = getTemplateById(fallbackId);
   return {
     title: fallback.title,
     summary: fallback.summary,
@@ -103,6 +106,12 @@ export function analyzeProfileText(profileText: string, username = "instagram"):
     crowdTolerance: fallback.crowdTolerance,
     confidenceNotes: [`distributed fallback: ${fallbackId}`]
   };
+}
+
+function getTemplateById(id: PersonaTemplateId): PersonaTemplate {
+  const template = templates.find((item) => item.id === id);
+  if (!template) throw new Error(`Missing persona template: ${id}`);
+  return template;
 }
 
 export function selectFallbackSampleId(input: string): "cafe-gallery" | "ocean-nature" | "food-city" {

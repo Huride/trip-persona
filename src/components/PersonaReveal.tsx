@@ -59,6 +59,9 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
               {visibleImages.map((image) => (
                 <figure key={`${selectedTag}-${image.url}`} className="w-40 shrink-0 snap-start overflow-hidden rounded-xl bg-white shadow-sm">
                   <img src={toProxiedImageUrl(image.url)} alt={image.alt} className="aspect-square w-full object-cover" loading="eager" />
+                  {image.visualDescription ? (
+                    <figcaption className="min-h-16 px-3 py-2 text-[11px] font-bold leading-4 text-cyan-950">{image.visualDescription}</figcaption>
+                  ) : null}
                 </figure>
               ))}
             </div>
@@ -141,15 +144,21 @@ function formatInstagramHandle(username: string): string {
 function buildInsightCards(result: TripPersonaResult) {
   const tags = result.persona.tasteTags;
   const evidence = result.profileEvidence ?? [];
-  const mood = tags.includes("ocean") || tags.includes("coastal") || tags.includes("beach")
-    ? "바다와 여유가 있는 장면"
-    : tags.includes("food") || tags.includes("local-food")
-      ? "로컬 미식과 활기 있는 거리"
-      : tags.includes("specialty-coffee") || tags.includes("cafe-hopping") || tags.includes("minimalist-aesthetic") || tags.includes("local-neighborhood")
-        ? "조용한 카페와 감도 높은 동네"
-        : tags.includes("gallery") || tags.includes("design") || tags.includes("art")
-        ? "전시, 디자인, 감도 높은 동네"
-        : "카페와 산책이 섞인 도시 취향";
+  const mood = hasAnyTag(tags, ["social-gathering", "social-gatherings", "social-travel", "social-oriented", "collaboration-centric"])
+    ? "사람들과 함께 즐기는 트렌디한 장면"
+    : hasAnyTag(tags, ["trendy-spots", "photo-worthy", "photography", "photo-spots", "instagrammable", "instagrammable-spots"])
+      ? "사진으로 남기기 좋은 트렌디한 장소"
+      : hasAnyTag(tags, ["active", "active-vibes", "active-experience", "active-lifestyle", "activity-focused", "interactive-experiences"])
+        ? "활기 있는 체험과 도심 핫플"
+        : tags.includes("ocean") || tags.includes("coastal") || tags.includes("beach")
+          ? "바다와 여유가 있는 장면"
+          : tags.includes("food") || tags.includes("local-food")
+            ? "로컬 미식과 활기 있는 거리"
+            : tags.includes("specialty-coffee") || tags.includes("cafe-hopping") || tags.includes("minimalist-aesthetic") || tags.includes("local-neighborhood")
+              ? "조용한 카페와 감도 높은 동네"
+              : tags.includes("gallery") || tags.includes("design") || tags.includes("art")
+                ? "전시, 디자인, 감도 높은 동네"
+                : "프로필 신호를 바탕으로 한 개인화된 여행 취향";
   const paceLabel = result.persona.pace === "slow" ? "하루 2-3곳을 깊게 보는 일정" : result.persona.pace === "packed" ? "하루 5곳 이상 촘촘한 일정" : "대표 코스와 여유를 섞는 일정";
   const crowdLabel = result.persona.crowdTolerance === "low" ? "혼잡을 피하는 쪽" : result.persona.crowdTolerance === "high" ? "활기 있는 장소도 괜찮은 쪽" : "혼잡도는 중간 수준까지 허용";
   const evidenceTitle = evidence[0] ?? result.persona.confidenceNotes[0] ?? "프로필 텍스트와 설문 답변을 함께 반영했습니다.";
@@ -160,6 +169,10 @@ function buildInsightCards(result: TripPersonaResult) {
     { label: "혼잡 민감도", title: crowdLabel, description: evidence[2] ?? "추천지의 시간대와 Plan B를 고를 때 이 기준을 반영합니다." },
     { label: "추천 근거", title: evidenceTitle, description: "아래 추천 여행지는 이 분석 결과와 이동 가능 범위를 함께 적용해 정렬됩니다." }
   ];
+}
+
+function hasAnyTag(tags: string[], candidates: string[]): boolean {
+  return candidates.some((tag) => tags.includes(tag));
 }
 
 function labelPersonaTag(tag: string, dynamicLabels?: Record<string, string>): string {
@@ -215,7 +228,33 @@ function labelPersonaTag(tag: string, dynamicLabels?: Record<string, string>): s
     "collaboration-centric": "함께 즐기는 경험",
     "social-gathering": "사람들과 함께하는 장면",
     "city-tour": "도시 투어",
-    "activity-focused": "활동 중심"
+    "activity-focused": "활동 중심",
+    "social-oriented": "함께하는 여행",
+    "active-lifestyle": "에너제틱 활동",
+    "photo-spots": "인생샷 스팟",
+    nightlife: "야간 무드",
+    nature: "자연",
+    studio: "스튜디오",
+    indoor: "실내 공간",
+    "photo-studio": "사진 스튜디오",
+    "cafe": "카페",
+    street: "거리",
+    "mirror-selfie": "거울 셀피",
+    "selfie": "셀피",
+    "creative-space": "창작 공간",
+    "indoor-space": "실내 공간",
+    cheerful: "밝은 분위기",
+    friendly: "친근한 분위기",
+    playful: "장난스러운 무드",
+    vibrant: "활기찬 분위기",
+    cozy: "아늑한 공간",
+    stylish: "스타일리시한 무드",
+    bright: "밝은 무드",
+    warm: "따뜻한 무드",
+    youthful: "영한 감도",
+    relaxed: "편안한 분위기",
+    energetic: "에너제틱한 무드",
+    fun: "즐거운 분위기"
   };
 
   return labels[tag] ?? tag.split("-").filter(Boolean).map((word) => labels[word] ?? word).join(" ");

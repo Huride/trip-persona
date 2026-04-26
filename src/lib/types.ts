@@ -103,6 +103,13 @@ export interface ProfileEvidenceImage {
   alt: string;
   source: string;
   tags?: string[];
+  visualDescription?: string;
+  visualTags?: string[];
+  visualMood?: string[];
+  visualPlace?: string[];
+  visualActivities?: string[];
+  analysisSource?: "vision" | "metadata";
+  analysisConfidence?: number;
 }
 
 export interface DestinationRecommendation {
