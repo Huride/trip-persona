@@ -7,11 +7,13 @@ import type { ProfileEvidenceImage, TripPersonaResult } from "@/src/lib/types";
 
 interface PersonaRevealProps {
   result: TripPersonaResult;
+  travelPlanStatus: "idle" | "planning" | "ready" | "error";
+  travelPlanError?: string | null;
   onContinue: () => void;
   onRestart: () => void;
 }
 
-export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealProps) {
+export function PersonaReveal({ result, travelPlanStatus, travelPlanError, onContinue, onRestart }: PersonaRevealProps) {
   const insightCards = buildInsightCards(result);
   const evidenceTags = buildEvidenceTags(result.profileImages ?? [], result.persona.tasteTagLabels);
   const [activeTag, setActiveTag] = useState(evidenceTags[0]?.tag ?? ALL_IMAGES_TAG);
@@ -92,9 +94,31 @@ export function PersonaReveal({ result, onContinue, onRestart }: PersonaRevealPr
         </article>
 
         <div className="grid gap-2">
-          <button onClick={onContinue} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-cyan-800 px-4 text-[16px] font-extrabold text-white">
-            추천 여행지 확인하기
-            <ArrowRight aria-hidden="true" size={18} />
+          {travelPlanStatus === "planning" ? (
+            <div className="grid gap-2 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-cyan-950">
+              <div className="flex items-center gap-3">
+                <span className="h-5 w-5 shrink-0 rounded-full border-4 border-cyan-100 border-t-cyan-800 animate-spin" />
+                <p className="text-[14px] font-extrabold">여행지와 날짜별 일정을 만드는 중<span className="loading-dots" /></p>
+              </div>
+              <p className="text-[12px] font-bold leading-4 text-cyan-900">취향 분석은 완료됐어요. 항공/교통, 숙소, 맛집, 레저 구좌까지 묶는 동안 잠시만 기다려주세요.</p>
+            </div>
+          ) : null}
+
+          {travelPlanStatus === "error" ? (
+            <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] font-bold leading-5 text-red-700">
+              여행 계획 생성에 실패했습니다. {travelPlanError ?? "잠시 후 다시 시도해주세요."}
+            </p>
+          ) : null}
+
+          <button
+            onClick={onContinue}
+            disabled={travelPlanStatus !== "ready"}
+            className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-4 text-[16px] font-extrabold transition ${
+              travelPlanStatus === "ready" ? "bg-cyan-800 text-white" : "bg-neutral-200 text-neutral-500"
+            }`}
+          >
+            {travelPlanStatus === "ready" ? "추천 여행지 확인하기" : "추천 여행지 준비 중"}
+            {travelPlanStatus === "ready" ? <ArrowRight aria-hidden="true" size={18} /> : null}
           </button>
           <button onClick={onRestart} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-cyan-200 bg-white px-4 text-[15px] font-extrabold text-cyan-900">
             <RotateCcw aria-hidden="true" size={17} />

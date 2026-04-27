@@ -10,6 +10,7 @@ import type { ProfileAnalysisResult, TripPersonaResult, TripSurvey } from "@/src
 
 type FlowStage = "entry" | "survey" | "finalizing" | "persona" | "recommendations" | "error";
 type ProfileAnalysisStatus = "idle" | "analyzing" | "ready" | "fallback" | "error";
+type TravelPlanStatus = "idle" | "planning" | "ready" | "error";
 
 export default function HomePage() {
   const [stage, setStage] = useState<FlowStage>("entry");
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [result, setResult] = useState<TripPersonaResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [profileStatus, setProfileStatus] = useState<ProfileAnalysisStatus>("idle");
+  const [travelPlanStatus, setTravelPlanStatus] = useState<TravelPlanStatus>("idle");
   const profileAnalysisPromise = useRef<Promise<ProfileAnalysisResult | null> | null>(null);
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function HomePage() {
     setResult(null);
     setError(null);
     setProfileStatus("analyzing");
+    setTravelPlanStatus("idle");
     profileAnalysisPromise.current = fetch("/api/profile-analysis", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,6 +55,11 @@ export default function HomePage() {
 
     try {
       const profileAnalysis = await profileAnalysisPromise.current;
+      const initialResult = buildProfileOnlyResult(profileAnalysis, survey);
+      setResult(initialResult);
+      setTravelPlanStatus("planning");
+      setStage("persona");
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,10 +72,11 @@ export default function HomePage() {
 
       const data = (await response.json()) as TripPersonaResult;
       setResult(data);
-      setStage("persona");
+      setTravelPlanStatus("ready");
     } catch (error) {
+      setTravelPlanStatus("error");
       setError(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
-      setStage("error");
+      setStage((current) => current === "persona" ? current : "error");
     }
   }
 
@@ -77,6 +86,7 @@ export default function HomePage() {
     setResult(null);
     setError(null);
     setProfileStatus("idle");
+    setTravelPlanStatus("idle");
     profileAnalysisPromise.current = null;
   }
 
@@ -93,7 +103,15 @@ export default function HomePage() {
   }
 
   if (stage === "persona" && result) {
-    return <PersonaReveal result={result} onContinue={() => setStage("recommendations")} onRestart={restart} />;
+    return (
+      <PersonaReveal
+        result={result}
+        travelPlanStatus={travelPlanStatus}
+        travelPlanError={error}
+        onContinue={() => setStage("recommendations")}
+        onRestart={restart}
+      />
+    );
   }
 
   if (stage === "recommendations" && result) {
@@ -111,4 +129,29 @@ export default function HomePage() {
       </section>
     </main>
   );
+}
+
+function buildProfileOnlyResult(profileAnalysis: ProfileAnalysisResult | null, survey: TripSurvey): TripPersonaResult {
+  const fallbackPersona: ProfileAnalysisResult["persona"] = {
+    title: "인스타 취향 분석 완료",
+    summary: "프로필 신호와 설문 답변을 바탕으로 여행 취향을 정리했습니다. 지금 여행지와 날짜별 일정을 생성하고 있습니다.",
+    tasteTags: survey.include.length > 0 ? survey.include : ["personalized-travel"],
+    pace: survey.pace,
+    crowdTolerance: survey.avoid.includes("혼잡") ? "low" : "medium",
+    confidenceNotes: ["설문 답변을 바탕으로 먼저 취향 요약을 만들고 있습니다."]
+  };
+
+  return {
+    persona: profileAnalysis?.persona ?? fallbackPersona,
+    destinations: [],
+    concepts: [],
+    itinerary: [],
+    whyThisFits: [],
+    excludedPlaces: [],
+    destinationPlans: [],
+    source: profileAnalysis?.source,
+    profileUsername: profileAnalysis?.username,
+    profileEvidence: profileAnalysis?.profileEvidence ?? [],
+    profileImages: profileAnalysis?.profileImages ?? []
+  };
 }
