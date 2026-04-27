@@ -248,6 +248,15 @@ interface InstagramFetchOptions {
   retryDelayMs?: number;
 }
 
+interface InstagramFeedPage {
+  images: ProfileEvidenceImage[];
+  textLines: string[];
+  nextMaxId: string | null;
+  moreAvailable: boolean;
+}
+
+const MAX_PROFILE_IMAGES = 100;
+
 export async function fetchInstagramWebProfileInfo(
   instagramUrl: string,
   options: InstagramFetchOptions = {}
@@ -280,8 +289,9 @@ export async function fetchInstagramWebProfileInfo(
         continue;
       }
 
-      const parsed = parseInstagramWebProfileInfo(await response.json(), instagramUrl);
-      if (parsed) return parsed;
+      const payload = await response.json();
+      const parsed = parseInstagramWebProfileInfo(payload, instagramUrl);
+      if (parsed) return await enrichWithPaginatedFeed(parsed, payload, instagramUrl);
       console.warn("[instagram] web_profile_info unusable payload", { username, attempt });
     } catch (error) {
       console.warn("[instagram] web_profile_info failed", {
@@ -299,6 +309,159 @@ export async function fetchInstagramWebProfileInfo(
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function enrichWithPaginatedFeed(
+  profile: InstagramProfileContent,
+  payload: unknown,
+  instagramUrl: string
+): Promise<InstagramProfileContent> {
+  const userId = readWebProfileUserId(payload);
+  if (!userId) return profile;
+
+  const feed = await fetchInstagramUserFeedPages(userId, profile.username, instagramUrl);
+  if (feed.images.length === 0) return profile;
+
+  const profileImages = mergeProfileImages(profile.profileImages ?? [], feed.images).slice(0, MAX_PROFILE_IMAGES);
+  return {
+    ...profile,
+    profileText: [
+      profile.profileText,
+      ...feed.textLines
+    ].filter(Boolean).join("\n"),
+    profileImages
+  };
+}
+
+async function fetchInstagramUserFeedPages(userId: string, username: string, instagramUrl: string): Promise<{ images: ProfileEvidenceImage[]; textLines: string[] }> {
+  const images: ProfileEvidenceImage[] = [];
+  const textLines: string[] = [];
+  let maxId: string | null = null;
+
+  for (let page = 1; page <= 9 && images.length < MAX_PROFILE_IMAGES; page += 1) {
+    try {
+      const params = new URLSearchParams({ count: "50" });
+      if (maxId) params.set("max_id", maxId);
+      const response = await fetch(`https://www.instagram.com/api/v1/feed/user/${encodeURIComponent(userId)}/?${params.toString()}`, {
+        headers: {
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+          "accept": "*/*",
+          "accept-language": "en-US,en;q=0.9,ko;q=0.8",
+          "referer": instagramUrl,
+          "x-ig-app-id": "936619743392459",
+          "x-requested-with": "XMLHttpRequest"
+        },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) {
+        console.warn("[instagram] feed user non-ok", { username, page, status: response.status });
+        break;
+      }
+
+      const feedPage = parseInstagramFeedPage(await response.json(), username, page);
+      images.push(...feedPage.images);
+      textLines.push(...feedPage.textLines);
+
+      if (!feedPage.moreAvailable || !feedPage.nextMaxId) break;
+      maxId = feedPage.nextMaxId;
+    } catch (error) {
+      console.warn("[instagram] feed user failed", {
+        username,
+        page,
+        message: error instanceof Error ? error.message : "unknown error"
+      });
+      break;
+    }
+  }
+
+  return {
+    images: mergeProfileImages([], images).slice(0, MAX_PROFILE_IMAGES),
+    textLines
+  };
+}
+
+function parseInstagramFeedPage(value: unknown, username: string, page: number): InstagramFeedPage {
+  if (!value || typeof value !== "object") {
+    return { images: [], textLines: [], nextMaxId: null, moreAvailable: false };
+  }
+
+  const record = value as Record<string, unknown>;
+  const items = Array.isArray(record.items) ? record.items : [];
+  const images: ProfileEvidenceImage[] = [];
+  const textLines: string[] = [];
+
+  for (const [index, item] of items.entries()) {
+    if (!item || typeof item !== "object") continue;
+    const itemRecord = item as Record<string, unknown>;
+    const url = readBestFeedImageUrl(itemRecord);
+    const caption = readFeedCaption(itemRecord);
+    const location = readFeedLocation(itemRecord);
+    const alt = caption
+      ? `Photo by ${username}: ${caption.slice(0, 160)}`
+      : location
+        ? `Photo by ${username} at ${location}`
+        : `Photo by ${username}`;
+
+    if (caption) textLines.push(`feed page ${page} caption ${index + 1}: ${caption}`);
+    if (location) textLines.push(`feed page ${page} location ${index + 1}: ${location}`);
+    if (!url) continue;
+
+    images.push({
+      url,
+      alt,
+      source: "Instagram feed API",
+      tags: inferImageTags([alt, caption, location].filter(Boolean).join(" "))
+    });
+  }
+
+  return {
+    images,
+    textLines,
+    nextMaxId: typeof record.next_max_id === "string" ? record.next_max_id : null,
+    moreAvailable: record.more_available === true
+  };
+}
+
+function mergeProfileImages(base: ProfileEvidenceImage[], incoming: ProfileEvidenceImage[]): ProfileEvidenceImage[] {
+  const seen = new Set<string>();
+  const merged: ProfileEvidenceImage[] = [];
+  for (const image of [...base, ...incoming]) {
+    if (!image.url || seen.has(image.url)) continue;
+    seen.add(image.url);
+    merged.push(image);
+  }
+  return merged;
+}
+
+function readWebProfileUserId(value: unknown): string | null {
+  if (!value || typeof value !== "object") return null;
+  const user = (value as { data?: { user?: unknown } }).data?.user;
+  if (!user || typeof user !== "object") return null;
+  const id = (user as { id?: unknown }).id;
+  return typeof id === "string" && id ? id : null;
+}
+
+function readBestFeedImageUrl(item: Record<string, unknown>): string {
+  const imageVersions = item.image_versions2;
+  if (!imageVersions || typeof imageVersions !== "object") return "";
+  const candidates = (imageVersions as { candidates?: unknown }).candidates;
+  if (!Array.isArray(candidates)) return "";
+  const candidate = candidates.find((entry) => entry && typeof entry === "object") as { url?: unknown } | undefined;
+  return typeof candidate?.url === "string" ? decodeHtml(candidate.url) : "";
+}
+
+function readFeedCaption(item: Record<string, unknown>): string {
+  const caption = item.caption;
+  if (!caption || typeof caption !== "object") return "";
+  const text = (caption as { text?: unknown }).text;
+  return typeof text === "string" ? text : "";
+}
+
+function readFeedLocation(item: Record<string, unknown>): string {
+  const location = item.location;
+  if (!location || typeof location !== "object") return "";
+  const name = (location as { name?: unknown }).name;
+  return typeof name === "string" ? name : "";
 }
 
 async function fetchInstagramDomProfile(instagramUrl: string, username: string): Promise<InstagramProfileContent | null> {

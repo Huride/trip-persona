@@ -15,11 +15,13 @@ interface VisionImageAnalysis {
 
 const BATCH_SIZE = 6;
 const MAX_IMAGE_BYTES = 4_500_000;
+const MAX_VISION_IMAGES = 36;
 
 export async function analyzeProfileImagesWithVision(images: ProfileEvidenceImage[], username: string): Promise<ProfileEvidenceImage[]> {
   if (images.length === 0) return images;
 
-  const prepared = await Promise.all(images.map((image, index) => prepareImagePart(image, index)));
+  const visionImages = images.slice(0, MAX_VISION_IMAGES);
+  const prepared = await Promise.all(visionImages.map((image, index) => prepareImagePart(image, index)));
   const results = new Map<string, VisionImageAnalysis>();
 
   for (let start = 0; start < prepared.length; start += BATCH_SIZE) {

@@ -171,4 +171,81 @@ describe("fetchInstagramWebProfileInfo", () => {
     expect(result).toEqual(expect.objectContaining({ source: "live", username: "hsyang.johan" }));
     expect(result?.profileImages).toHaveLength(1);
   });
+
+  it("adds paginated feed images when the web profile only contains the first page", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes("/web_profile_info/")) {
+        return Response.json({
+          data: {
+            user: {
+              id: "45199632900",
+              username: "chuucandoit",
+              full_name: "지켜츄",
+              is_private: false,
+              edge_owner_to_timeline_media: {
+                edges: [
+                  {
+                    node: {
+                      display_url: "https://cdn.example.com/feed-1.jpg",
+                      accessibility_caption: "Photo by 지켜츄 at a city cafe."
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        });
+      }
+
+      if (url.includes("max_id=cursor-1")) {
+        return Response.json({
+          status: "ok",
+          more_available: false,
+          items: [
+            {
+              id: "media-3",
+              image_versions2: { candidates: [{ url: "https://cdn.example.com/feed-3.jpg", width: 1080, height: 1080 }] },
+              caption: { text: "전시와 로컬 카페를 함께 둘러본 날" },
+              location: { name: "성수동" }
+            }
+          ]
+        });
+      }
+
+      return Response.json({
+        status: "ok",
+        more_available: true,
+        next_max_id: "cursor-1",
+        items: [
+          {
+            id: "media-1",
+            image_versions2: { candidates: [{ url: "https://cdn.example.com/feed-1.jpg", width: 1080, height: 1080 }] },
+            caption: { text: "중복 이미지" }
+          },
+          {
+            id: "media-2",
+            image_versions2: { candidates: [{ url: "https://cdn.example.com/feed-2.jpg", width: 1080, height: 1080 }] },
+            caption: { text: "해변에서 액티비티" },
+            location: { name: "제주 바다" }
+          }
+        ]
+      });
+    }));
+
+    const result = await fetchInstagramWebProfileInfo(
+      "https://www.instagram.com/chuucandoit/",
+      { retryDelayMs: 0 }
+    );
+
+    expect(result?.profileImages).toHaveLength(3);
+    expect(result?.profileImages?.map((image) => image.url)).toEqual([
+      "https://cdn.example.com/feed-1.jpg",
+      "https://cdn.example.com/feed-2.jpg",
+      "https://cdn.example.com/feed-3.jpg"
+    ]);
+    expect(result?.profileText).toContain("해변에서 액티비티");
+    expect(result?.profileText).toContain("성수동");
+  });
 });
