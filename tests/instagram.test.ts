@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { parseInstagramSeoHtml, parseInstagramWebProfileInfo, selectInstagramFeedImages } from "../src/lib/instagram";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fetchInstagramWebProfileInfo, parseInstagramSeoHtml, parseInstagramWebProfileInfo, selectInstagramFeedImages } from "../src/lib/instagram";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("parseInstagramSeoHtml", () => {
   it("extracts public SEO profile metadata as usable live profile text", () => {
@@ -124,5 +129,46 @@ describe("parseInstagramWebProfileInfo", () => {
         source: "Instagram public API"
       })
     );
+  });
+});
+
+describe("fetchInstagramWebProfileInfo", () => {
+  it("retries transient non-ok responses before returning the live profile", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    let calls = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      calls += 1;
+      if (calls < 3) {
+        return new Response("rate limited", { status: 429 });
+      }
+      return Response.json({
+        data: {
+          user: {
+            username: "hsyang.johan",
+            full_name: "Johan",
+            is_private: false,
+            edge_owner_to_timeline_media: {
+              edges: [
+                {
+                  node: {
+                    display_url: "https://cdn.example.com/feed-1.jpg",
+                    accessibility_caption: "Photo by Johan in 앤트러사이트 서교점."
+                  }
+                }
+              ]
+            }
+          }
+        }
+      });
+    }));
+
+    const result = await fetchInstagramWebProfileInfo(
+      "https://www.instagram.com/hsyang.johan/",
+      { retryDelayMs: 0 }
+    );
+
+    expect(calls).toBe(3);
+    expect(result).toEqual(expect.objectContaining({ source: "live", username: "hsyang.johan" }));
+    expect(result?.profileImages).toHaveLength(1);
   });
 });

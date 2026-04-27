@@ -243,25 +243,62 @@ async function fetchInstagramSeoProfile(instagramUrl: string): Promise<Instagram
   return parseInstagramSeoHtml(html, instagramUrl);
 }
 
-async function fetchInstagramWebProfileInfo(instagramUrl: string): Promise<InstagramProfileContent | null> {
+interface InstagramFetchOptions {
+  retries?: number;
+  retryDelayMs?: number;
+}
+
+export async function fetchInstagramWebProfileInfo(
+  instagramUrl: string,
+  options: InstagramFetchOptions = {}
+): Promise<InstagramProfileContent | null> {
   const username = extractUsername(instagramUrl);
   if (!username || username === "instagram") return null;
-  const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`, {
-    headers: {
-      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      "accept": "*/*",
-      "accept-language": "en-US,en;q=0.9,ko;q=0.8",
-      "referer": `https://www.instagram.com/${username}/`,
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-origin",
-      "x-ig-app-id": "936619743392459",
-      "x-requested-with": "XMLHttpRequest"
-    },
-    signal: AbortSignal.timeout(8000)
-  });
-  if (!response.ok) return null;
-  return parseInstagramWebProfileInfo(await response.json(), instagramUrl);
+  const retries = options.retries ?? 3;
+  const retryDelayMs = options.retryDelayMs ?? 350;
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetch(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`, {
+        headers: {
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+          "accept": "*/*",
+          "accept-language": "en-US,en;q=0.9,ko;q=0.8",
+          "referer": `https://www.instagram.com/${username}/`,
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-origin",
+          "x-ig-app-id": "936619743392459",
+          "x-requested-with": "XMLHttpRequest"
+        },
+        signal: AbortSignal.timeout(8000)
+      });
+
+      if (!response.ok) {
+        console.warn("[instagram] web_profile_info non-ok", { username, attempt, status: response.status });
+        if (attempt < retries) await delay(retryDelayMs * attempt);
+        continue;
+      }
+
+      const parsed = parseInstagramWebProfileInfo(await response.json(), instagramUrl);
+      if (parsed) return parsed;
+      console.warn("[instagram] web_profile_info unusable payload", { username, attempt });
+    } catch (error) {
+      console.warn("[instagram] web_profile_info failed", {
+        username,
+        attempt,
+        message: error instanceof Error ? error.message : "unknown error"
+      });
+    }
+
+    if (attempt < retries) await delay(retryDelayMs * attempt);
+  }
+
+  return null;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchInstagramDomProfile(instagramUrl: string, username: string): Promise<InstagramProfileContent | null> {
